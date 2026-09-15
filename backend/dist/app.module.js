@@ -7,17 +7,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     Module({
         imports: [
-            MongooseModule.forRoot('mongodb://localhost:27017/restaurant-management'),
+            PrismaModule,
             UsersModule,
-            AuthModule,
+            AuthModule
         ],
         controllers: [AppController],
         providers: [AppService],
