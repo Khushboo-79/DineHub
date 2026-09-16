@@ -30,10 +30,34 @@ model User {
 }
 
 model Restaurant {
-  id        String   @id @default(uuid())
-  name      String
-  ownerId   String   @unique
-  owner     User     @relation(fields: [ownerId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String
+  ownerId     String   @unique
+  owner       User     @relation(fields: [ownerId], references: [id])
+  logo        String?  // Base64 encoded image or URL
+  phone       String?
+  email       String?
+  address     String?
+  isOnboarded Boolean  @default(false)
+  outlets     Outlet[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Outlet {
+  id            String     @id @default(uuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  name          String
+  openingTime   String
+  closingTime   String
+  services      String[]   // e.g., ['DINE_IN', 'TAKEAWAY', 'DELIVERY']
+  cuisines      String[]
+  hasGST        Boolean    @default(false)
+  gstin         String?
+  fssaiNumber   String?
+  serviceCharge Float?
+  invoicePrefix String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }

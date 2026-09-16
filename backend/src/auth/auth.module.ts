@@ -9,7 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
 @Module({
   imports: [
     PrismaModule,
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'super-secret-key-change-me',
       signOptions: { expiresIn: '1d' },
@@ -17,6 +17,6 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  exports: [AuthService, PassportModule, JwtModule],
 })
 export class AuthModule {}
