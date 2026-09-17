@@ -13,6 +13,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { RestaurantsModule } from './restaurants/restaurants.module.js';
 import { MenuModule } from './menu/menu.module.js';
 import { OrdersModule } from './orders/orders.module.js';
+import { InventoryModule } from './inventory/inventory.module.js';
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -23,7 +24,8 @@ AppModule = __decorate([
             AuthModule,
             RestaurantsModule,
             MenuModule,
-            OrdersModule
+            OrdersModule,
+            InventoryModule
         ],
         controllers: [AppController],
         providers: [AppService],
