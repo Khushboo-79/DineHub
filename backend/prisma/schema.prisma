@@ -68,6 +68,7 @@ model Restaurant {
   outlets     Outlet[]
   categories  MenuCategory[]
   menuItems   MenuItem[]
+  inventoryItems InventoryItem[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -180,4 +181,24 @@ model OrderItem {
   total       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model InventoryItem {
+  id              String      @id @default(uuid())
+  restaurantId    String
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id])
+  name            String
+  category        String
+  description     String?
+  image           String?     // Base64 string
+  unit            String      // e.g., 'KG', 'L', 'Pcs'
+  currentStock    Float
+  reorderLevel    Float?
+  purchasePrice   Float
+  supplier        String?
+  expiryDate      DateTime?
+  isAvailable     Boolean     @default(true)
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }

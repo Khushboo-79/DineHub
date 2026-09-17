@@ -261,4 +261,61 @@ Updates the status of an order (e.g., Marking it as Completed or Cancelled).
 
 ---
 
+## 5. Inventory Management Module
+
+### 5.1 Create Inventory Item
+Add a new item to track in your inventory.
+
+- **URL:** `http://localhost:3000/inventory`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "name": "Paneer",
+  "category": "Dairy",
+  "unit": "KG",
+  "currentStock": 10,
+  "reorderLevel": 5,
+  "purchasePrice": 250,
+  "supplier": "Local Dairy Farm",
+  "isAvailable": true
+}
+```
+
+### 5.2 Get Inventory (List & Dashboard Metrics)
+Fetches all inventory items and automatically calculates the Total Items, Low Stock items, Out of Stock items, and total Inventory Value.
+
+- **URL:** `http://localhost:3000/inventory`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 5.3 Update Inventory Item
+Update stock levels, price, or details of an inventory item.
+
+- **URL:** `http://localhost:3000/inventory/:id`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "currentStock": 8
+}
+```
+
+### 5.4 Delete Inventory Item
+Remove an item from inventory tracking completely.
+
+- **URL:** `http://localhost:3000/inventory/:id`
+- **Method:** `DELETE`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
 *Note: This document will be continually updated as we build more features.*
