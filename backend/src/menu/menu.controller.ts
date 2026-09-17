@@ -11,26 +11,26 @@ export class MenuController {
 
   @Get()
   getMenu(@Request() req: any) {
-    return this.menuService.getMenu(req.user.sub);
+    return this.menuService.getMenu(req.user.userId);
   }
 
   @Post('category')
   createCategory(@Request() req: any, @Body() dto: CreateCategoryDto) {
-    return this.menuService.createCategory(req.user.sub, dto);
+    return this.menuService.createCategory(req.user.userId, dto);
   }
 
   @Post('item')
   createMenuItem(@Request() req: any, @Body() dto: CreateMenuItemDto) {
-    return this.menuService.createMenuItem(req.user.sub, dto);
+    return this.menuService.createMenuItem(req.user.userId, dto);
   }
 
   @Patch('item/:id')
   updateMenuItem(@Request() req: any, @Param('id') id: string, @Body() data: any) {
-    return this.menuService.updateMenuItem(req.user.sub, id, data);
+    return this.menuService.updateMenuItem(req.user.userId, id, data);
   }
 
   @Delete('item/:id')
   deleteMenuItem(@Request() req: any, @Param('id') id: string) {
-    return this.menuService.deleteMenuItem(req.user.sub, id);
+    return this.menuService.deleteMenuItem(req.user.userId, id);
   }
 }
