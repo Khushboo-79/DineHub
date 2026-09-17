@@ -20,9 +20,8 @@ enum Role {
 model User {
   id           String      @id @default(uuid())
   mobileNumber String      @unique
-  email        String      @unique
-  password     String
-  ownerName    String
+  email        String?     @unique
+  ownerName    String?
   role         Role        @default(MANAGER)
   restaurant   Restaurant?
   createdAt    DateTime    @default(now())
@@ -60,4 +59,13 @@ model Outlet {
   invoicePrefix String?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+}
+
+model OtpSession {
+  id           String   @id @default(uuid())
+  mobileNumber String   @unique
+  otp          String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

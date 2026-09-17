@@ -1,25 +1,23 @@
 import { PrismaService } from '../prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
-import { RegisterDto } from './dto/register.dto.js';
-import { LoginDto } from './dto/login.dto.js';
+import { SendOtpDto } from './dto/send-otp.dto.js';
+import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 export declare class AuthService {
-    private readonly prisma;
-    private readonly jwtService;
+    private prisma;
+    private jwtService;
     constructor(prisma: PrismaService, jwtService: JwtService);
-    register(dto: RegisterDto): Promise<{
-        access_token: string;
-        user: {
-            id: string;
-            ownerName: string;
-            restaurantName: string | undefined;
-        };
+    sendOtp(dto: SendOtpDto): Promise<{
+        message: string;
+        dev_otp: string;
     }>;
-    login(dto: LoginDto): Promise<{
+    verifyOtp(dto: VerifyOtpDto): Promise<{
+        message: string;
         access_token: string;
         user: {
             id: string;
-            ownerName: string;
-            restaurantName: string | undefined;
+            mobileNumber: string;
+            role: import(".prisma/client").$Enums.Role;
+            isNewUser: boolean;
         };
     }>;
 }
