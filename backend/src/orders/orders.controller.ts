@@ -12,17 +12,17 @@ export class OrdersController {
 
   @Post()
   createOrder(@Request() req: any, @Body() dto: CreateOrderDto) {
-    return this.ordersService.createOrder(req.user.sub, dto);
+    return this.ordersService.createOrder(req.user.userId, dto);
   }
 
   @Get()
   getOrders(@Request() req: any, @Query('status') status?: OrderStatus) {
-    return this.ordersService.getOrders(req.user.sub, status);
+    return this.ordersService.getOrders(req.user.userId, status);
   }
 
   @Get(':id')
   getOrderById(@Request() req: any, @Param('id') id: string) {
-    return this.ordersService.getOrderById(req.user.sub, id);
+    return this.ordersService.getOrderById(req.user.userId, id);
   }
 
   @Patch(':id/status')
@@ -31,6 +31,6 @@ export class OrdersController {
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateOrderStatus(req.user.sub, id, dto);
+    return this.ordersService.updateOrderStatus(req.user.userId, id, dto);
   }
 }
