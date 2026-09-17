@@ -16,7 +16,7 @@ async function main() {
     create: {
       mobileNumber: '9999999999',
       email: 'admin@dinehub.com',
-      password,
+      // password,
       ownerName: 'Admin Boss',
       role: Role.ADMIN,
     },
@@ -30,7 +30,7 @@ async function main() {
     create: {
       mobileNumber: '9876543210',
       email: 'rohit@royalfeast.com',
-      password,
+      // password,
       ownerName: 'Rohit Sharma',
       role: Role.MANAGER,
       restaurant: {
@@ -81,7 +81,7 @@ async function main() {
     create: {
       mobileNumber: '9123456780',
       email: 'priya@urbancrust.in',
-      password,
+      // password,
       ownerName: 'Priya Verma',
       role: Role.MANAGER,
       restaurant: {
@@ -124,3 +124,6 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+
+
