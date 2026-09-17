@@ -102,6 +102,163 @@ This single API endpoint captures all the data from the 3 Onboarding screens (Re
 }
 ```
 
+## 3. Menu Management Module
+
+### 3.1 Create Category
+Create a new menu category (e.g., "Starters", "Main Course").
+
+- **URL:** `http://localhost:3000/menu/category`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "name": "Starters"
+}
+```
+
+### 3.2 Add Food Item
+Add a new food item to a category, optionally including Add-ons and Variants.
+
+- **URL:** `http://localhost:3000/menu/item`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "categoryId": "<category_uuid_here>",
+  "name": "Paneer Tikka",
+  "description": "Marinated cottage cheese grilled to perfection.",
+  "image": "data:image/png;base64,iVBORw0KGgo...",
+  "price": 220,
+  "gst": 5,
+  "isVeg": true,
+  "preparationTime": 15,
+  "isAvailable": true,
+  "addons": [
+    { "name": "Extra Cheese", "price": 40 },
+    { "name": "Extra Paneer", "price": 60 }
+  ],
+  "variants": [
+    { "name": "Small", "price": 120 },
+    { "name": "Medium", "price": 180 },
+    { "name": "Large", "price": 240 }
+  ]
+}
+```
+*(Note: `addons` and `variants` are optional arrays).*
+
+### 3.3 Get Menu (List)
+Fetches the entire menu, grouped by categories, including all items, addons, and variants.
+
+- **URL:** `http://localhost:3000/menu`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 3.4 Update / Toggle Food Item
+Update an item's details or toggle its availability status (e.g., Mark Out of Stock).
+
+- **URL:** `http://localhost:3000/menu/item/:id`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "isAvailable": false
+}
+```
+
+### 3.5 Delete Food Item
+Permanently remove an item from the menu.
+
+- **URL:** `http://localhost:3000/menu/item/:id`
+- **Method:** `DELETE`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+## 4. Orders Management Module
+
+### 4.1 Create Order
+Create a new order for the restaurant. The backend auto-generates the `orderNumber`.
+
+- **URL:** `http://localhost:3000/orders`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "source": "DOORIQ",
+  "paymentMethod": "UPI",
+  "paymentStatus": "PAID",
+  "customerName": "John Doe",
+  "customerPhone": "9876543210",
+  "tableNumber": "T-05",
+  "guestCount": 2,
+  "subtotal": 360,
+  "discount": 18,
+  "gst": 17,
+  "totalAmount": 359,
+  "items": [
+    {
+      "itemName": "Paneer Tikka",
+      "addons": ["Mint Chutney"],
+      "qty": 1,
+      "price": 220,
+      "total": 220
+    },
+    {
+      "itemName": "Butter Naan",
+      "addons": [],
+      "qty": 2,
+      "price": 40,
+      "total": 80
+    }
+  ]
+}
+```
+
+### 4.2 Get Orders (List)
+Fetches all orders. You can filter by `status`.
+
+- **URL:** `http://localhost:3000/orders?status=NEW`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+- **Query Params (Optional):** `status` (NEW, PREPARING, READY, COMPLETED, CANCELLED)
+
+### 4.3 Get Single Order (Details)
+Fetches a single order by its UUID, including all `items`.
+
+- **URL:** `http://localhost:3000/orders/:id`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 4.4 Update Order Status
+Updates the status of an order (e.g., Marking it as Completed or Cancelled).
+
+- **URL:** `http://localhost:3000/orders/:id/status`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "status": "COMPLETED",
+  "paymentStatus": "PAID"
+}
+```
+
 ---
 
 *Note: This document will be continually updated as we build more features.*

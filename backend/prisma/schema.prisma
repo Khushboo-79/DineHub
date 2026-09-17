@@ -17,6 +17,33 @@ enum Role {
   CUSTOMER
 }
 
+enum OrderSource {
+  DOORIQ
+  DINE_IN
+  SWIGGY
+  ZOMATO
+}
+
+enum OrderStatus {
+  NEW
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  UPI
+  CASH
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
 model User {
   id           String      @id @default(uuid())
   mobileNumber String      @unique
@@ -39,6 +66,8 @@ model Restaurant {
   address     String?
   isOnboarded Boolean  @default(false)
   outlets     Outlet[]
+  categories  MenuCategory[]
+  menuItems   MenuItem[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -57,6 +86,7 @@ model Outlet {
   fssaiNumber   String?
   serviceCharge Float?
   invoicePrefix String?
+  orders        Order[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -68,4 +98,86 @@ model OtpSession {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model MenuCategory {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  name         String
+  items        MenuItem[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model MenuItem {
+  id              String            @id @default(uuid())
+  restaurantId    String
+  restaurant      Restaurant        @relation(fields: [restaurantId], references: [id])
+  categoryId      String
+  category        MenuCategory      @relation(fields: [categoryId], references: [id])
+  name            String
+  description     String?
+  image           String?           // Base64
+  price           Float?            // Optional if variants exist
+  gst             Float             @default(0)
+  isVeg           Boolean           @default(true)
+  preparationTime Int?              // in minutes
+  isAvailable     Boolean           @default(true)
+  addons          MenuItemAddon[]
+  variants        MenuItemVariant[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model MenuItemAddon {
+  id         String   @id @default(uuid())
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  name       String
+  price      Float
+}
+
+model MenuItemVariant {
+  id         String   @id @default(uuid())
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  name       String
+  price      Float
+}
+
+model Order {
+  id              String         @id @default(uuid())
+  orderNumber     String         @unique // e.g., DQ10245
+  outletId        String
+  outlet          Outlet         @relation(fields: [outletId], references: [id])
+  source          OrderSource    @default(DOORIQ)
+  status          OrderStatus    @default(NEW)
+  paymentMethod   PaymentMethod  @default(CASH)
+  paymentStatus   PaymentStatus  @default(PENDING)
+  transactionId   String?
+  customerName    String?
+  customerPhone   String?
+  tableNumber     String?
+  guestCount      Int?
+  subtotal        Float
+  discount        Float          @default(0)
+  gst             Float          @default(0)
+  totalAmount     Float
+  items           OrderItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemName    String
+  addons      String[] // Array of addon names chosen
+  qty         Int      @default(1)
+  price       Float
+  total       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
