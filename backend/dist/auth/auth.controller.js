@@ -10,36 +10,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
-import { RegisterDto } from './dto/register.dto.js';
-import { LoginDto } from './dto/login.dto.js';
+import { SendOtpDto } from './dto/send-otp.dto.js';
+import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    register(dto) {
-        return this.authService.register(dto);
+    sendOtp(dto) {
+        return this.authService.sendOtp(dto);
     }
-    login(dto) {
-        return this.authService.login(dto);
+    verifyOtp(dto) {
+        return this.authService.verifyOtp(dto);
     }
 };
 __decorate([
-    Post('register'),
+    Post('send-otp'),
+    HttpCode(HttpStatus.OK),
     __param(0, Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [RegisterDto]),
+    __metadata("design:paramtypes", [SendOtpDto]),
     __metadata("design:returntype", void 0)
-], AuthController.prototype, "register", null);
+], AuthController.prototype, "sendOtp", null);
 __decorate([
-    Post('login'),
+    Post('verify-otp'),
+    HttpCode(HttpStatus.OK),
     __param(0, Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [LoginDto]),
+    __metadata("design:paramtypes", [VerifyOtpDto]),
     __metadata("design:returntype", void 0)
-], AuthController.prototype, "login", null);
+], AuthController.prototype, "verifyOtp", null);
 AuthController = __decorate([
     Controller('auth'),
     __metadata("design:paramtypes", [AuthService])

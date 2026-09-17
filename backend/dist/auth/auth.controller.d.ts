@@ -1,23 +1,21 @@
 import { AuthService } from './auth.service.js';
-import { RegisterDto } from './dto/register.dto.js';
-import { LoginDto } from './dto/login.dto.js';
+import { SendOtpDto } from './dto/send-otp.dto.js';
+import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    register(dto: RegisterDto): Promise<{
-        access_token: string;
-        user: {
-            id: string;
-            ownerName: string;
-            restaurantName: string | undefined;
-        };
+    sendOtp(dto: SendOtpDto): Promise<{
+        message: string;
+        dev_otp: string;
     }>;
-    login(dto: LoginDto): Promise<{
+    verifyOtp(dto: VerifyOtpDto): Promise<{
+        message: string;
         access_token: string;
         user: {
             id: string;
-            ownerName: string;
-            restaurantName: string | undefined;
+            mobileNumber: string;
+            role: import(".prisma/client").$Enums.Role;
+            isNewUser: boolean;
         };
     }>;
 }

@@ -3,6 +3,14 @@ import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray, IsNumber, Matches
 export class SetupRestaurantDto {
   // Screen 1: Restaurant Details
   @IsString()
+  @IsNotEmpty()
+  restaurantName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  ownerName: string;
+
+  @IsString()
   @IsOptional()
   logo?: string;
 
