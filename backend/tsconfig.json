@@ -23,5 +23,17 @@
       "node"
     ],
     "resolveJsonModule": true
-  }
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/monolith/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/api-gateway/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/auth-service/tsconfig.app.json"
+    }
+  ]
 }
