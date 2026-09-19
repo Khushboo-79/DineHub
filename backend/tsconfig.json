@@ -34,6 +34,24 @@
     },
     {
       "path": "./apps/auth-service/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/restaurant-service/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/app/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/menu-service/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/inventory-service/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/order-service/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/billing-service/tsconfig.app.json"
     }
   ]
 }

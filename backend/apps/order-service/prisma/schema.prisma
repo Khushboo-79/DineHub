@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@prisma/client/order"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("ORDER_DATABASE_URL")
+}
+
+enum OrderSource {
+  DOORIQ
+  DINE_IN
+  SWIGGY
+  ZOMATO
+}
+
+enum OrderStatus {
+  NEW
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  UPI
+  CASH
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model Order {
+  id              String         @id @default(uuid())
+  orderNumber     String         @unique // e.g., DQ10245
+  outletId        String
+  source          OrderSource    @default(DOORIQ)
+  status          OrderStatus    @default(NEW)
+  paymentMethod   PaymentMethod  @default(CASH)
+  paymentStatus   PaymentStatus  @default(PENDING)
+  transactionId   String?
+  customerName    String?
+  customerPhone   String?
+  tableNumber     String?
+  guestCount      Int?
+  subtotal        Float
+  discount        Float          @default(0)
+  gst             Float          @default(0)
+  totalAmount     Float
+  items           OrderItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemName    String
+  addons      String[] // Array of addon names chosen
+  qty         Int      @default(1)
+  price       Float
+  total       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
