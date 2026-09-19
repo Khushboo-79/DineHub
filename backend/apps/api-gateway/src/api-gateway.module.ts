@@ -14,6 +14,46 @@ import { ApiGatewayService } from './api-gateway.service.js';
           port: 3002,
         },
       },
+      {
+        name: 'RESTAURANT_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 3003,
+        },
+      },
+      {
+        name: 'MENU_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 3004,
+        },
+      },
+      {
+        name: 'INVENTORY_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 3005,
+        },
+      },
+      {
+        name: 'ORDER_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 3006,
+        },
+      },
+      {
+        name: 'BILLING_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: '127.0.0.1',
+          port: 3007,
+        },
+      },
     ]),
   ],
   controllers: [ApiGatewayController],

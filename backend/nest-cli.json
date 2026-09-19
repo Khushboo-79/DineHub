@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/monolith/src",
+  "sourceRoot": "apps/api-gateway/src",
   "compilerOptions": {
     "deleteOutDir": true,
     "builder": "rspack",
-    "tsConfigPath": "apps/monolith/tsconfig.app.json"
+    "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/monolith",
+  "root": "apps/api-gateway",
   "projects": {
     "api-gateway": {
       "type": "application",
@@ -28,13 +28,50 @@
         "tsConfigPath": "apps/auth-service/tsconfig.app.json"
       }
     },
-    "monolith": {
+    "billing-service": {
       "type": "application",
-      "root": "apps/monolith",
+      "root": "apps/billing-service",
       "entryFile": "main",
-      "sourceRoot": "apps/monolith/src",
+      "sourceRoot": "apps/billing-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/monolith/tsconfig.app.json"
+        "tsConfigPath": "apps/billing-service/tsconfig.app.json"
+      }
+    },
+    "inventory-service": {
+      "type": "application",
+      "root": "apps/inventory-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/inventory-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/inventory-service/tsconfig.app.json"
+      }
+    },
+    "menu-service": {
+      "type": "application",
+      "root": "apps/menu-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/menu-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/menu-service/tsconfig.app.json"
+      }
+    },
+
+    "order-service": {
+      "type": "application",
+      "root": "apps/order-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/order-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/order-service/tsconfig.app.json"
+      }
+    },
+    "restaurant-service": {
+      "type": "application",
+      "root": "apps/restaurant-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/restaurant-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/restaurant-service/tsconfig.app.json"
       }
     }
   }
