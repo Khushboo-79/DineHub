@@ -94,4 +94,13 @@ export class AuthService {
       },
     };
   }
+
+  async validateJwt(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      return { valid: true, user: payload };
+    } catch (e) {
+      return { valid: false };
+    }
+  }
 }
