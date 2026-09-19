@@ -48,7 +48,7 @@
     "@rspack/core": "^2.2.6",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.13.6",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
@@ -61,7 +61,7 @@
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "typescript": "^6.0.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.2",
+    "vitest": "^4.1.11",
     "webpack-node-externals": "^3.0.0"
   }
 }
