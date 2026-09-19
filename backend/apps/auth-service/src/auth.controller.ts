@@ -19,8 +19,7 @@ export class AuthController {
   }
 
   @MessagePattern({ cmd: 'validate_jwt' })
-  validateJwt(@Payload() payload: any) {
-    // Basic JWT validation logic here for API Gateway
-    return { valid: true, user: payload };
+  validateJwt(@Payload() payload: { token: string }) {
+    return this.authService.validateJwt(payload.token);
   }
 }
