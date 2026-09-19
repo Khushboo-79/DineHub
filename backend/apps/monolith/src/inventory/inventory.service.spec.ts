@@ -1,12 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InventoryService } from './inventory.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 describe('InventoryService', () => {
   let service: InventoryService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [InventoryService],
+      providers: [
+        InventoryService,
+        {
+          provide: PrismaService,
+          useValue: {
+            restaurant: { findUnique: vi.fn() },
+            inventoryItem: { create: vi.fn(), findMany: vi.fn(), update: vi.fn(), delete: vi.fn() },
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<InventoryService>(InventoryService);

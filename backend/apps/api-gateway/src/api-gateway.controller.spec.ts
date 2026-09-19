@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiGatewayController } from './api-gateway.controller.js';
-import { ApiGatewayService } from './api-gateway.service.js';
+import { ApiGatewayController } from './api-gateway.controller';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('ApiGatewayController', () => {
   let apiGatewayController: ApiGatewayController;
@@ -8,15 +8,21 @@ describe('ApiGatewayController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [ApiGatewayController],
-      providers: [ApiGatewayService],
+      providers: [
+        {
+          provide: 'AUTH_SERVICE',
+          useValue: {
+            send: vi.fn(),
+            emit: vi.fn(),
+          },
+        },
+      ],
     }).compile();
 
     apiGatewayController = app.get<ApiGatewayController>(ApiGatewayController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(apiGatewayController.getHello()).toBe('Hello World!');
-    });
+  it('should be defined', () => {
+    expect(apiGatewayController).toBeDefined();
   });
 });

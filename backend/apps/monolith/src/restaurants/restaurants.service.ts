@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SetupRestaurantDto } from './dto/setup-restaurant.dto.js';
 
@@ -10,7 +10,7 @@ export class RestaurantsService {
     // Run within an interactive transaction so we can get the upserted restaurant ID
     const result = await this.prisma.$transaction(async (tx) => {
       // 1. Update the User with their ownerName and email
-      const updatedUser = await tx.user.update({
+      await tx.user.update({
         where: { id: ownerId },
         data: {
           ownerName: dto.ownerName,

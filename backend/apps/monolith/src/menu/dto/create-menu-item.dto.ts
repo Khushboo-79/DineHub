@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class AddonDto {
+export class AddonDto {
   @IsString()
   @IsNotEmpty()
   name: string;
@@ -10,7 +10,7 @@ class AddonDto {
   price: number;
 }
 
-class VariantDto {
+export class VariantDto {
   @IsString()
   @IsNotEmpty()
   name: string;

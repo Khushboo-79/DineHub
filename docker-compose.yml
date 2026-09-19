@@ -1,8 +1,11 @@
 version: '3.8'
+
 services:
+  # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3-management
     container_name: dinehub-rabbitmq
+    restart: unless-stopped
     ports:
       - "5672:5672"   # AMQP protocol port
       - "15672:15672" # Management UI port
@@ -11,6 +14,80 @@ services:
       RABBITMQ_DEFAULT_PASS: password
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dinehub-network
+
+  # Auth Microservice (Port 3002 internally)
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: dinehub-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres.wmhfkajfvpmtdzbdjqdn:Gitesh2207Dooriq@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://postgres.wmhfkajfvpmtdzbdjqdn:Gitesh2207Dooriq@aws-0-ap-south-1.pooler.supabase.com:5432/postgres}
+      JWT_SECRET: ${JWT_SECRET:-dinehub_jwt_super_secret_dev_key_2026}
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      AUTH_QUEUE: auth_queue
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - dinehub-network
+
+  # Core Business Domains / Monolith (Port 3000 internally)
+  monolith:
+    build:
+      context: ./backend
+      dockerfile: apps/monolith/Dockerfile
+    container_name: dinehub-monolith
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres.wmhfkajfvpmtdzbdjqdn:Gitesh2207Dooriq@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true}
+      DIRECT_URL: ${DIRECT_URL:-postgresql://postgres.wmhfkajfvpmtdzbdjqdn:Gitesh2207Dooriq@aws-0-ap-south-1.pooler.supabase.com:5432/postgres}
+      JWT_SECRET: ${JWT_SECRET:-dinehub_jwt_super_secret_dev_key_2026}
+    networks:
+      - dinehub-network
+
+  # Public API Gateway (Port 4000 exposed publicly)
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: dinehub-api-gateway
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:-dinehub_jwt_super_secret_dev_key_2026}
+      MONOLITH_URL: http://monolith:3000
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      AUTH_QUEUE: auth_queue
+      CORS_ORIGIN: "http://localhost:3000,http://localhost:5173,http://localhost:4000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      monolith:
+        condition: service_started
+    networks:
+      - dinehub-network
 
 volumes:
   rabbitmq_data:
+
+networks:
+  dinehub-network:
+    driver: bridge

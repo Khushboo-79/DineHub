@@ -4,6 +4,10 @@
     "typescript/no-explicit-any": "off",
     "typescript/no-floating-promises": "error"
   },
+  "ignorePatterns": [
+    "**/contract.d.ts",
+    "**/dist/**"
+  ],
   "env": {
     "node": true
   }

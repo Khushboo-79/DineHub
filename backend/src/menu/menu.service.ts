@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { CreateMenuItemDto } from './dto/create-menu-item.dto';
+import { PrismaService } from '../../apps/monolith/src/prisma/prisma.service';
+import type { CreateCategoryDto } from '../../apps/monolith/src/menu/dto/create-category.dto';
+import type { CreateMenuItemDto, AddonDto, VariantDto } from '../../apps/monolith/src/menu/dto/create-menu-item.dto';
 
 @Injectable()
 export class MenuService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private async getRestaurantId(ownerId: string) {
     const restaurant = await this.prisma.restaurant.findUnique({
@@ -29,13 +29,21 @@ export class MenuService {
   async createMenuItem(ownerId: string, dto: CreateMenuItemDto) {
     const restaurantId = await this.getRestaurantId(ownerId);
 
+    // Verify category exists and belongs to this restaurant
+    const category = await this.prisma.menuCategory.findFirst({
+      where: { id: dto.categoryId, restaurantId },
+    });
+    if (!category) {
+      throw new NotFoundException(`Menu category with ID '${dto.categoryId}' not found. Please provide a valid categoryId created via POST /menu/category.`);
+    }
+
     // Prepare nested creates
-    const addonsData = dto.addons?.map((addon) => ({
+    const addonsData = dto.addons?.map((addon: AddonDto) => ({
       name: addon.name,
       price: addon.price,
     })) || [];
 
-    const variantsData = dto.variants?.map((variant) => ({
+    const variantsData = dto.variants?.map((variant: VariantDto) => ({
       name: variant.name,
       price: variant.price,
     })) || [];
@@ -68,7 +76,7 @@ export class MenuService {
 
   async getMenu(ownerId: string) {
     const restaurantId = await this.getRestaurantId(ownerId);
-    
+
     // Returns categories with their nested items, addons, and variants
     return this.prisma.menuCategory.findMany({
       where: { restaurantId },
@@ -110,7 +118,7 @@ export class MenuService {
     await this.prisma.menuItem.delete({
       where: { id: itemId },
     });
-    
+
     return { message: 'Item deleted successfully' };
   }
 }
