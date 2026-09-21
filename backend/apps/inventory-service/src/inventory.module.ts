@@ -1,11 +1,21 @@
 import { Module } from '@nestjs/common';
-import { InventoryService } from './inventory.service.js';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { InventoryController } from './inventory.controller.js';
+import { InventoryService } from './inventory.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    ClientsModule.register([
+      {
+        name: 'RESTAURANT_SERVICE',
+        transport: Transport.TCP,
+        options: { host: '127.0.0.1', port: 3002 },
+      },
+    ]),
+  ],
   controllers: [InventoryController],
-  providers: [InventoryService],
+  providers: [InventoryService]
 })
 export class InventoryModule {}

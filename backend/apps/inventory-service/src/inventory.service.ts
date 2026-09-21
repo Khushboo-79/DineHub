@@ -1,16 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from './prisma/prisma.service.js';
 import { CreateInventoryItemDto } from './dto/create-inventory-item.dto.js';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto.js';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class InventoryService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    @Inject('RESTAURANT_SERVICE') private restaurantClient: ClientProxy,
+  ) {}
 
   private async getRestaurantId(ownerId: string) {
-    // In a microservice architecture, this would make a TCP call to the RestaurantService
-    // to resolve the ownerId to a restaurantId. For now, we mock it as 1:1.
-    return ownerId;
+    try {
+      const restaurant = await firstValueFrom(
+        this.restaurantClient.send({ cmd: 'get_restaurant_by_owner' }, { ownerId })
+      );
+      if (!restaurant || !restaurant.id) {
+        throw new NotFoundException('Restaurant not found for this user');
+      }
+      return restaurant.id;
+    } catch (error) {
+      throw new NotFoundException('Restaurant not found for this user');
+    }
   }
 
   async create(ownerId: string, dto: CreateInventoryItemDto) {
@@ -27,21 +40,35 @@ export class InventoryService {
     });
   }
 
-  async findAll(ownerId: string) {
+  async getInventory(ownerId: string, page: number = 1, limit: number = 10) {
     const restaurantId = await this.getRestaurantId(ownerId);
+    
+    const skip = (page - 1) * limit;
 
-    const items = await this.prisma.inventoryItem.findMany({
+    const [items, total] = await Promise.all([
+      this.prisma.inventoryItem.findMany({
+        where: { restaurantId },
+        orderBy: { name: 'asc' },
+        skip,
+        take: Number(limit),
+      }),
+      this.prisma.inventoryItem.count({
+        where: { restaurantId },
+      })
+    ]);
+
+    // Calculate metrics for all items (not just this page)
+    // Note: In a real app, this aggregation should be done in a separate query or cached
+    const allItems = await this.prisma.inventoryItem.findMany({
       where: { restaurantId },
-      orderBy: { name: 'asc' },
     });
-
-    // Calculate metrics
-    const totalItems = items.length;
+    
+    const totalItems = allItems.length;
     let lowStockCount = 0;
     let outOfStockCount = 0;
     let inventoryValue = 0;
 
-    items.forEach((item: any) => {
+    allItems.forEach((item: any) => {
       inventoryValue += (item.currentStock * item.purchasePrice);
 
       if (item.currentStock <= 0) {
@@ -58,7 +85,12 @@ export class InventoryService {
         outOfStockCount,
         inventoryValue
       },
-      items
+      data: items,
+      meta: {
+        total,
+        page: Number(page),
+        lastPage: Math.ceil(total / limit),
+      }
     };
   }
 
@@ -105,5 +137,26 @@ export class InventoryService {
     });
 
     return { message: 'Inventory item deleted successfully' };
+  }
+
+  async deductInventoryForOrder(order: any) {
+    if (!order || !order.items || order.items.length === 0) return;
+    
+    // In a real application, you'd map order.items to inventory items.
+    // For this demonstration, we'll try to find an inventory item with the same name.
+    for (const orderItem of order.items) {
+      const inventoryItem = await this.prisma.inventoryItem.findFirst({
+        where: { name: orderItem.itemName },
+      });
+      
+      if (inventoryItem) {
+        const newStock = Math.max(0, inventoryItem.currentStock - orderItem.qty);
+        await this.prisma.inventoryItem.update({
+          where: { id: inventoryItem.id },
+          data: { currentStock: newStock },
+        });
+        console.log(`[RabbitMQ] Deducted ${orderItem.qty} from ${inventoryItem.name}. New Stock: ${newStock}`);
+      }
+    }
   }
 }

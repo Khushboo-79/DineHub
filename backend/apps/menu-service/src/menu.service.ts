@@ -1,16 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from './prisma/prisma.service.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto.js';
+import { firstValueFrom } from 'rxjs';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class MenuService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('RESTAURANT_SERVICE') private restaurantClient: ClientProxy,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   private async getRestaurantId(ownerId: string) {
-    // In a microservice architecture, this would make a TCP call to the RestaurantService
-    // to resolve the ownerId to a restaurantId. For now, we mock it as 1:1.
-    return ownerId; 
+    try {
+      const restaurant = await firstValueFrom(
+        this.restaurantClient.send({ cmd: 'get_restaurant_by_owner' }, { ownerId })
+      );
+      if (!restaurant || !restaurant.id) {
+        throw new NotFoundException('Restaurant not found for this user');
+      }
+      return restaurant.id;
+    } catch (error) {
+      throw new NotFoundException('Restaurant not found for this user');
+    }
   }
 
   async createCategory(ownerId: string, dto: CreateCategoryDto) {
@@ -63,21 +79,53 @@ export class MenuService {
     });
   }
 
-  async getMenu(ownerId: string) {
+  async getMenu(ownerId: string, page: number = 1, limit: number = 10) {
     const restaurantId = await this.getRestaurantId(ownerId);
     
-    // Returns categories with their nested items, addons, and variants
-    return this.prisma.menuCategory.findMany({
-      where: { restaurantId },
-      include: {
-        items: {
-          include: {
-            addons: true,
-            variants: true,
+    // Redis Caching
+    const cacheKey = `menu_${restaurantId}_page_${page}_limit_${limit}`;
+    const cachedData = await this.cacheManager.get(cacheKey);
+    if (cachedData) {
+      console.log(`[Redis] Cache Hit: ${cacheKey}`);
+      return cachedData;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [categories, total] = await Promise.all([
+      this.prisma.menuCategory.findMany({
+        where: { restaurantId },
+        include: {
+          items: {
+            include: {
+              variants: true,
+              addons: true,
+            },
           },
         },
-      },
-    });
+        orderBy: { name: 'asc' },
+        skip,
+        take: Number(limit),
+      }),
+      this.prisma.menuCategory.count({
+        where: { restaurantId },
+      })
+    ]);
+
+    const result = {
+      data: categories,
+      meta: {
+        total,
+        page: Number(page),
+        lastPage: Math.ceil(total / limit),
+      }
+    };
+
+    // Store in cache
+    await this.cacheManager.set(cacheKey, result);
+    console.log(`[Redis] Cache Miss (Stored): ${cacheKey}`);
+
+    return result;
   }
 
   async updateMenuItem(ownerId: string, itemId: string, data: any) {
