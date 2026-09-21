@@ -27,9 +27,6 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/monolith/tsconfig.app.json"
-    },
-    {
       "path": "./apps/api-gateway/tsconfig.app.json"
     },
     {
@@ -37,9 +34,6 @@
     },
     {
       "path": "./apps/restaurant-service/tsconfig.app.json"
-    },
-    {
-      "path": "./apps/app/tsconfig.app.json"
     },
     {
       "path": "./apps/menu-service/tsconfig.app.json"

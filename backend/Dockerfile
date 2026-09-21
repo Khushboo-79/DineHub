@@ -4,6 +4,9 @@ FROM node:20-alpine AS build
 # Create app directory
 WORKDIR /usr/src/app
 
+# Install OpenSSL for Prisma engine compatibility on Alpine
+RUN apk add --no-cache openssl openssl-dev libc6-compat
+
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 
@@ -15,12 +18,16 @@ COPY . .
 
 # Build the specified microservice using the ARG
 ARG SERVICE_NAME
+RUN npx prisma generate --schema=apps/${SERVICE_NAME}/prisma/schema.prisma || true
 RUN npx nest build ${SERVICE_NAME}
 
 # Production image
 FROM node:20-alpine
 
 WORKDIR /usr/src/app
+
+# Install OpenSSL for Prisma engine compatibility on Alpine
+RUN apk add --no-cache openssl openssl-dev libc6-compat
 
 COPY package*.json ./
 
