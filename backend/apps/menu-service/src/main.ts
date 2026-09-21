@@ -6,7 +6,7 @@ import { MenuModule } from './menu.module.js';
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(MenuModule, {
     transport: Transport.TCP,
-    options: { host: '127.0.0.1', port: 3004 },
+    options: { host: '0.0.0.0', port: 3004 },
   });
   
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));

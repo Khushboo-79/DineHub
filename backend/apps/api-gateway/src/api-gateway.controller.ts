@@ -18,6 +18,15 @@ export class ApiGatewayController {
     private readonly websocketGateway: AppWebSocketGateway,
   ) {}
 
+  @Get()
+  healthCheck() {
+    return {
+      status: 'success',
+      message: 'DineHub API Gateway is running!',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post('auth/send-otp')
   sendOtp(@Body() body: any) {
     return this.authClient.send({ cmd: 'send_otp' }, body);

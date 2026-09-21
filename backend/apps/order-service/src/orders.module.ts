@@ -11,12 +11,12 @@ import { PrismaModule } from './prisma/prisma.module.js';
       {
         name: 'RESTAURANT_SERVICE',
         transport: Transport.TCP,
-        options: { host: '127.0.0.1', port: 3002 },
+        options: { host: process.env.RESTAURANT_SERVICE_HOST || 'restaurant-service', port: 3002 },
       },
       {
         name: 'MENU_SERVICE',
         transport: Transport.TCP,
-        options: { host: '127.0.0.1', port: 3004 },
+        options: { host: process.env.MENU_SERVICE_HOST || 'menu-service', port: 3004 },
       },
       {
         name: 'INVENTORY_RMQ',
