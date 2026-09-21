@@ -19,8 +19,8 @@ export class BillingServiceController {
   }
 
   @MessagePattern({ cmd: 'get_invoices' })
-  getInvoices(@Payload() data: { ownerId: string; status?: InvoiceStatus }) {
-    return this.billingService.getInvoices(data.ownerId, data.status);
+  getInvoices(@Payload() data: { ownerId: string; status?: InvoiceStatus, page?: number, limit?: number }) {
+    return this.billingService.getInvoices(data.ownerId, data.status, data.page, data.limit);
   }
 
   @MessagePattern({ cmd: 'get_invoice_by_id' })

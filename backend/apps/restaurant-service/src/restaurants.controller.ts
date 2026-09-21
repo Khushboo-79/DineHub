@@ -11,4 +11,9 @@ export class RestaurantsController {
   setupRestaurant(@Payload() data: { ownerId: string; dto: SetupRestaurantDto }) {
     return this.restaurantsService.setupRestaurant(data.ownerId, data.dto);
   }
+
+  @MessagePattern({ cmd: 'get_restaurant_by_owner' })
+  getRestaurantByOwner(@Payload() data: { ownerId: string }) {
+    return this.restaurantsService.getRestaurantByOwner(data.ownerId);
+  }
 }

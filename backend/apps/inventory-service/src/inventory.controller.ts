@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern, Payload, EventPattern } from '@nestjs/microservices';
 import { InventoryService } from './inventory.service.js';
 import { CreateInventoryItemDto } from './dto/create-inventory-item.dto.js';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto.js';
@@ -14,8 +14,8 @@ export class InventoryController {
   }
 
   @MessagePattern({ cmd: 'get_inventory' })
-  findAll(@Payload() data: { ownerId: string }) {
-    return this.inventoryService.findAll(data.ownerId);
+  getInventory(@Payload() data: { ownerId: string, page?: number, limit?: number }) {
+    return this.inventoryService.getInventory(data.ownerId, data.page, data.limit);
   }
 
   @MessagePattern({ cmd: 'get_inventory_item' })
@@ -31,5 +31,12 @@ export class InventoryController {
   @MessagePattern({ cmd: 'delete_inventory_item' })
   remove(@Payload() data: { ownerId: string; id: string }) {
     return this.inventoryService.remove(data.ownerId, data.id);
+  }
+
+  @EventPattern('order_placed')
+  async handleOrderPlaced(@Payload() order: any) {
+    // Background Job: Deduct inventory based on order items
+    console.log(`[RabbitMQ] Received order_placed event for Order ID: ${order.id}`);
+    await this.inventoryService.deductInventoryForOrder(order);
   }
 }

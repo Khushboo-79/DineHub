@@ -15,8 +15,8 @@ export class OrdersController {
   }
 
   @MessagePattern({ cmd: 'get_orders' })
-  getOrders(@Payload() data: { ownerId: string; status?: OrderStatus }) {
-    return this.ordersService.getOrders(data.ownerId, data.status);
+  getOrders(@Payload() data: { ownerId: string; status?: OrderStatus, page?: number, limit?: number }) {
+    return this.ordersService.getOrders(data.ownerId, data.status, data.page, data.limit);
   }
 
   @MessagePattern({ cmd: 'get_order_by_id' })

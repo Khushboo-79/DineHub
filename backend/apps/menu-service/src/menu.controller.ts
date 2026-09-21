@@ -9,8 +9,8 @@ export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
   @MessagePattern({ cmd: 'get_menu' })
-  getMenu(@Payload() data: { ownerId: string }) {
-    return this.menuService.getMenu(data.ownerId);
+  getMenu(@Payload() data: { ownerId: string, page?: number, limit?: number }) {
+    return this.menuService.getMenu(data.ownerId, data.page, data.limit);
   }
 
   @MessagePattern({ cmd: 'create_category' })
