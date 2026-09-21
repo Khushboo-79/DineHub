@@ -1,7 +1,16 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ApiGatewayController } from './api-gateway.controller.js';
 import { ApiGatewayService } from './api-gateway.service.js';
+import { ThrottlerGuard } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        { ttl: 60000, limit: 10 },
 import { AppWebSocketGateway } from './websockets/websockets.gateway.js';
 import { WinstonModule, utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import * as winston from 'winston';
@@ -71,6 +80,7 @@ import { APP_GUARD } from '@nestjs/core';
     ]),
   ],
   controllers: [ApiGatewayController],
+  providers: [ApiGatewayService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
   providers: [
     ApiGatewayService, 
     AppWebSocketGateway,
