@@ -1,16 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from './prisma/prisma.service.js';
 import { CreateInvoiceDto, AddPaymentDto } from './dto/billing.dto.js';
 import { InvoiceStatus } from '@prisma/client/billing/index.js';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class BillingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('RESTAURANT_SERVICE') private restaurantClient: ClientProxy,
+  ) {}
 
   private async getRestaurantId(ownerId: string) {
-    // In a microservice architecture, this would make a TCP call to the RestaurantService
-    // to resolve the ownerId to a restaurantId. For now, we mock it as 1:1.
-    return ownerId;
+    try {
+      const restaurant = await firstValueFrom(
+        this.restaurantClient.send({ cmd: 'get_restaurant_by_owner' }, { ownerId })
+      );
+      if (!restaurant || !restaurant.id) {
+        throw new NotFoundException('Restaurant not found for this user');
+      }
+      return restaurant.id;
+    } catch (error) {
+      throw new NotFoundException('Restaurant not found for this user');
+    }
   }
 
   private generateInvoiceNumber(): string {
@@ -70,19 +83,40 @@ export class BillingService {
     return payment;
   }
 
-  async getInvoices(ownerId: string, status?: InvoiceStatus) {
+  async getInvoices(ownerId: string, status?: InvoiceStatus, page: number = 1, limit: number = 10) {
     const restaurantId = await this.getRestaurantId(ownerId);
     
-    return this.prisma.invoice.findMany({
-      where: {
-        restaurantId,
-        ...(status ? { status } : {}),
-      },
-      include: {
-        payments: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const skip = (page - 1) * limit;
+
+    const [invoices, total] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where: {
+          restaurantId,
+          ...(status ? { status } : {}),
+        },
+        include: {
+          payments: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit),
+      }),
+      this.prisma.invoice.count({
+        where: {
+          restaurantId,
+          ...(status ? { status } : {}),
+        }
+      })
+    ]);
+
+    return {
+      data: invoices,
+      meta: {
+        total,
+        page: Number(page),
+        lastPage: Math.ceil(total / limit),
+      }
+    };
   }
 
   async getInvoiceById(ownerId: string, id: string) {

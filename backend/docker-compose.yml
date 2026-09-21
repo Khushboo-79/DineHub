@@ -1,0 +1,214 @@
+version: '3.8'
+
+services:
+  # ---------------------
+  # DATABASES
+  # ---------------------
+  auth-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_auth
+    ports:
+      - "5432:5432"
+    networks:
+      - dinehub_network
+
+  restaurant-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_restaurant
+    ports:
+      - "5433:5432"
+    networks:
+      - dinehub_network
+
+  menu-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_menu
+    ports:
+      - "5434:5432"
+    networks:
+      - dinehub_network
+
+  inventory-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_inventory
+    ports:
+      - "5435:5432"
+    networks:
+      - dinehub_network
+
+  order-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_order
+    ports:
+      - "5436:5432"
+    networks:
+      - dinehub_network
+
+  billing-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dinehub_billing
+    ports:
+      - "5437:5432"
+    networks:
+      - dinehub_network
+
+  # ---------------------
+  # MESSAGE BROKER & CACHE
+  # ---------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    networks:
+      - dinehub_network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - dinehub_network
+
+  # ---------------------
+  # MICROSERVICES
+  # ---------------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - restaurant-service
+      - menu-service
+      - inventory-service
+      - order-service
+      - billing-service
+    networks:
+      - dinehub_network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://root:password@auth-db:5432/dinehub_auth?schema=public
+    depends_on:
+      - auth-db
+    networks:
+      - dinehub_network
+
+  restaurant-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: restaurant-service
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://root:password@restaurant-db:5432/dinehub_restaurant?schema=public
+    depends_on:
+      - restaurant-db
+    networks:
+      - dinehub_network
+
+  menu-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: menu-service
+    ports:
+      - "3004:3004"
+    environment:
+      - DATABASE_URL=postgresql://root:password@menu-db:5432/dinehub_menu?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - menu-db
+      - redis
+    networks:
+      - dinehub_network
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: inventory-service
+    ports:
+      - "3005:3005"
+    environment:
+      - DATABASE_URL=postgresql://root:password@inventory-db:5432/dinehub_inventory?schema=public
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+    depends_on:
+      - inventory-db
+      - rabbitmq
+    networks:
+      - dinehub_network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
+    ports:
+      - "3006:3006"
+    environment:
+      - DATABASE_URL=postgresql://root:password@order-db:5432/dinehub_order?schema=public
+      - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
+    depends_on:
+      - order-db
+      - rabbitmq
+    networks:
+      - dinehub_network
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: billing-service
+    ports:
+      - "3007:3007"
+    environment:
+      - DATABASE_URL=postgresql://root:password@billing-db:5432/dinehub_billing?schema=public
+    depends_on:
+      - billing-db
+    networks:
+      - dinehub_network
+
+networks:
+  dinehub_network:
+    driver: bridge

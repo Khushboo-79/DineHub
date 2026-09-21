@@ -1,17 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from './prisma/prisma.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto.js';
 import { OrderStatus } from '@prisma/client/order/index.js';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('RESTAURANT_SERVICE') private restaurantClient: ClientProxy,
+    @Inject('MENU_SERVICE') private menuClient: ClientProxy,
+    @Inject('INVENTORY_RMQ') private inventoryRmqClient: ClientProxy,
+  ) {}
 
   private async getOutletId(ownerId: string) {
-    // In a microservice architecture, this would make a TCP call to the RestaurantService
-    // to resolve the ownerId to an outletId. For now, we mock it as 1:1.
-    return ownerId;
+    try {
+      const restaurant = await firstValueFrom(
+        this.restaurantClient.send({ cmd: 'get_restaurant_by_owner' }, { ownerId })
+      );
+      if (!restaurant || !restaurant.outlets || restaurant.outlets.length === 0) {
+        throw new NotFoundException('Restaurant or Outlet not found for this user');
+      }
+      return restaurant.outlets[0].id;
+    } catch (error) {
+      throw new NotFoundException('Restaurant or Outlet not found for this user');
+    }
   }
 
   private generateOrderNumber(): string {
@@ -25,6 +40,35 @@ export class OrdersService {
 
   async createOrder(ownerId: string, dto: CreateOrderDto) {
     const outletId = await this.getOutletId(ownerId);
+    
+    // Data Consistency Check: Verify Menu Items
+    try {
+      // Get the full menu (pagination limits might be an issue here if menu > limit, but assuming all items fit for now)
+      const menuResponse = await firstValueFrom(
+        this.menuClient.send({ cmd: 'get_menu' }, { ownerId, page: 1, limit: 1000 })
+      );
+      
+      const allAvailableItemNames = new Set<string>();
+      if (menuResponse?.data) {
+        menuResponse.data.forEach((category: any) => {
+          category.items?.forEach((item: any) => {
+            allAvailableItemNames.add(item.name.toLowerCase());
+          });
+        });
+      }
+
+      // Verify each item in the order
+      for (const orderItem of dto.items) {
+        if (!allAvailableItemNames.has(orderItem.itemName.toLowerCase())) {
+          throw new BadRequestException(`Menu item '${orderItem.itemName}' does not exist.`);
+        }
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      // If menu service is down, we might want to proceed or block. Let's block for strict consistency.
+      throw new BadRequestException('Could not verify menu items. Menu service might be unavailable.');
+    }
+
     let orderNumber = this.generateOrderNumber();
 
     // Ensure uniqueness (simple retry logic)
@@ -42,7 +86,7 @@ export class OrdersService {
       total: item.total,
     }));
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         orderNumber,
         outletId,
@@ -66,23 +110,47 @@ export class OrdersService {
         items: true,
       },
     });
+
+    // Emit Event-Driven Background Job to RabbitMQ
+    this.inventoryRmqClient.emit('order_placed', order);
+
+    return order;
   }
 
-  async getOrders(ownerId: string, status?: OrderStatus) {
+  async getOrders(ownerId: string, status?: OrderStatus, page: number = 1, limit: number = 10) {
     const outletId = await this.getOutletId(ownerId);
     
-    return this.prisma.order.findMany({
-      where: { 
-        outletId,
-        ...(status ? { status } : {}),
+    const skip = (page - 1) * limit;
+    
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          outletId,
+          ...(status ? { status } : {}),
+        },
+        include: {
+          items: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit),
+      }),
+      this.prisma.order.count({
+        where: {
+          outletId,
+          ...(status ? { status } : {}),
+        },
+      })
+    ]);
+
+    return {
+      data: orders,
+      meta: {
+        total,
+        page: Number(page),
+        lastPage: Math.ceil(total / limit),
       },
-      include: {
-        items: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   async getOrderById(ownerId: string, id: string) {

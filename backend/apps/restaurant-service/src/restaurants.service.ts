@@ -9,15 +9,6 @@ export class RestaurantsService {
   async setupRestaurant(ownerId: string, dto: SetupRestaurantDto) {
     // Run within an interactive transaction so we can get the upserted restaurant ID
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Update the User with their ownerName and email
-      const updatedUser = await tx.user.update({
-        where: { id: ownerId },
-        data: {
-          ownerName: dto.ownerName,
-          email: dto.email,
-        },
-      });
-
       // 2. Upsert the Restaurant (Create if new, update if exists)
       const updatedRestaurant = await tx.restaurant.upsert({
         where: { ownerId },
@@ -65,5 +56,18 @@ export class RestaurantsService {
       restaurant: result.updatedRestaurant,
       outlet: result.newOutlet,
     };
+  }
+
+  async getRestaurantByOwner(ownerId: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { ownerId },
+      include: {
+        outlets: true
+      }
+    });
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found for this user');
+    }
+    return restaurant;
   }
 }
