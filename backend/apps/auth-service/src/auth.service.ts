@@ -3,6 +3,7 @@ import { PrismaService } from './prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
 import { SendOtpDto } from './dto/send-otp.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -102,5 +103,182 @@ export class AuthService {
     } catch (e) {
       return { valid: false };
     }
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        ownerName: true,
+        email: true,
+        mobileNumber: true,
+        role: true,
+        profileImage: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('User not found');
+    return user;
+  }
+
+  async editProfile(userId: string, dto: import('./dto/edit-profile.dto.js').EditProfileDto) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ownerName: dto.ownerName,
+        email: dto.email,
+        profileImage: dto.profileImage,
+      },
+      select: {
+        id: true,
+        ownerName: true,
+        email: true,
+        mobileNumber: true,
+        role: true,
+        profileImage: true,
+      },
+    });
+    return { message: 'Profile updated successfully', user };
+  }
+
+  async changePassword(userId: string, dto: import('./dto/change-password.dto.js').ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+
+    if (user.password) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required');
+      }
+      const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+      if (!isMatch) throw new UnauthorizedException('Incorrect current password');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Password updated successfully' };
+  }
+
+  async logout(userId: string) {
+    // For V1, the frontend will clear the JWT token locally.
+    // In the future, we could invalidate the refresh token here or blacklist the JWT.
+    return { message: 'Logged out successfully' };
+  }
+
+  // --- Staff Management Methods ---
+
+  async createStaff(ownerId: string, dto: import('./dto/staff.dto.js').CreateStaffDto) {
+    const existingUser = await this.prisma.user.findUnique({ where: { mobileNumber: dto.mobileNumber } });
+    if (existingUser) {
+      throw new BadRequestException('A user with this mobile number already exists');
+    }
+
+    const staff = await this.prisma.user.create({
+      data: {
+        mobileNumber: dto.mobileNumber,
+        email: dto.email,
+        ownerName: dto.ownerName,
+        role: dto.role,
+        salary: dto.salary,
+        joiningDate: dto.joiningDate ? new Date(dto.joiningDate) : null,
+        restaurantOwnerId: ownerId,
+        status: 'ACTIVE'
+      },
+      select: {
+        id: true,
+        ownerName: true,
+        mobileNumber: true,
+        email: true,
+        role: true,
+        salary: true,
+        joiningDate: true,
+        status: true
+      }
+    });
+
+    return staff;
+  }
+
+  async getStaff(ownerId: string, role?: import('@prisma/client/auth/index.js').Role) {
+    const staff = await this.prisma.user.findMany({
+      where: { 
+        restaurantOwnerId: ownerId,
+        ...(role ? { role } : {})
+      },
+      select: {
+        id: true,
+        ownerName: true,
+        mobileNumber: true,
+        email: true,
+        role: true,
+        salary: true,
+        joiningDate: true,
+        status: true,
+        profileImage: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return staff;
+  }
+
+  async getStaffById(ownerId: string, staffId: string) {
+    const staff = await this.prisma.user.findFirst({
+      where: { id: staffId, restaurantOwnerId: ownerId },
+      select: {
+        id: true,
+        ownerName: true,
+        mobileNumber: true,
+        email: true,
+        role: true,
+        salary: true,
+        joiningDate: true,
+        status: true,
+        profileImage: true
+      }
+    });
+
+    if (!staff) throw new BadRequestException('Staff member not found');
+    return staff;
+  }
+
+  async updateStaff(ownerId: string, staffId: string, dto: import('./dto/staff.dto.js').UpdateStaffDto) {
+    const staff = await this.prisma.user.findFirst({ where: { id: staffId, restaurantOwnerId: ownerId } });
+    if (!staff) throw new BadRequestException('Staff member not found');
+
+    const updated = await this.prisma.user.update({
+      where: { id: staffId },
+      data: {
+        ownerName: dto.ownerName,
+        mobileNumber: dto.mobileNumber,
+        email: dto.email,
+        role: dto.role,
+        salary: dto.salary,
+        joiningDate: dto.joiningDate ? new Date(dto.joiningDate) : undefined,
+        status: dto.status
+      },
+      select: {
+        id: true,
+        ownerName: true,
+        mobileNumber: true,
+        role: true,
+        status: true
+      }
+    });
+
+    return { message: 'Staff updated successfully', staff: updated };
+  }
+
+  async deleteStaff(ownerId: string, staffId: string) {
+    const staff = await this.prisma.user.findFirst({ where: { id: staffId, restaurantOwnerId: ownerId } });
+    if (!staff) throw new BadRequestException('Staff member not found');
+
+    await this.prisma.user.delete({ where: { id: staffId } });
+    return { message: 'Staff removed successfully' };
   }
 }

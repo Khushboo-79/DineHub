@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { PrismaService } from './prisma/prisma.service.js';
 import { CreateInvoiceDto, AddPaymentDto } from './dto/billing.dto.js';
@@ -129,5 +129,109 @@ export class BillingService {
 
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;
+  }
+
+  // --- Subscription Methods ---
+
+  private readonly AVAILABLE_PLANS = [
+    {
+      plan: 'STARTER',
+      name: 'Starter',
+      price: 999,
+      features: ['Up to 1 branch', 'Basic reports', 'Product management', 'Email support']
+    },
+    {
+      plan: 'GROWTH',
+      name: 'Growth',
+      price: 1999,
+      features: ['Up to 5 branches', 'Advanced analytics', 'Inventory management', 'Priority support', 'Custom branding']
+    },
+    {
+      plan: 'PRO',
+      name: 'Pro',
+      price: 3999,
+      features: ['Unlimited branches', 'AI insights', 'Supplier management', 'Dedicated support', 'White-label option']
+    }
+  ];
+
+  async getSubscription(ownerId: string) {
+    let sub = await this.prisma.subscription.findUnique({
+      where: { ownerId },
+      include: { payments: { orderBy: { date: 'desc' } } }
+    });
+
+    // If no subscription exists, auto-create a default one for the sake of the demo
+    if (!sub) {
+      const nextDate = new Date();
+      nextDate.setMonth(nextDate.getMonth() + 1);
+
+      sub = await this.prisma.subscription.create({
+        data: {
+          ownerId,
+          plan: 'GROWTH',
+          price: 1999,
+          status: 'Active',
+          nextBillingDate: nextDate,
+          payments: {
+            create: [
+              { amount: 1999, method: 'UPI • ****1234' },
+              { amount: 1999, method: 'UPI • ****1234', date: new Date(new Date().setMonth(new Date().getMonth() - 1)) },
+              { amount: 1999, method: 'UPI • ****1234', date: new Date(new Date().setMonth(new Date().getMonth() - 2)) }
+            ]
+          }
+        },
+        include: { payments: { orderBy: { date: 'desc' } } }
+      });
+    }
+
+    return {
+      currentSubscription: sub,
+      availablePlans: this.AVAILABLE_PLANS
+    };
+  }
+
+  async changePlan(ownerId: string, dto: import('./dto/subscription.dto.js').ChangePlanDto) {
+    const planDef = this.AVAILABLE_PLANS.find(p => p.plan === dto.plan);
+    if (!planDef) throw new BadRequestException('Invalid plan');
+
+    const nextDate = new Date();
+    nextDate.setMonth(nextDate.getMonth() + 1);
+
+    const sub = await this.prisma.subscription.upsert({
+      where: { ownerId },
+      update: {
+        plan: dto.plan,
+        price: planDef.price,
+        status: 'Active',
+        nextBillingDate: nextDate,
+      },
+      create: {
+        ownerId,
+        plan: dto.plan,
+        price: planDef.price,
+        status: 'Active',
+        nextBillingDate: nextDate,
+      }
+    });
+
+    // Record the payment for this upgrade/change
+    await this.prisma.subscriptionPayment.create({
+      data: {
+        subscriptionId: sub.id,
+        amount: planDef.price,
+        method: 'UPI • ****1234',
+        status: 'PAID'
+      }
+    });
+
+    return this.getSubscription(ownerId);
+  }
+
+  async cancelSubscription(ownerId: string) {
+    await this.prisma.subscription.update({
+      where: { ownerId },
+      data: { status: 'Cancelled' }
+    });
+    return { message: 'Subscription cancelled successfully' };
   }
 }

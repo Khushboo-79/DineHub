@@ -49,3 +49,26 @@ model Payment {
   paidAt        DateTime      @default(now())
   createdAt     DateTime      @default(now())
 }
+
+model Subscription {
+  id              String   @id @default(uuid())
+  ownerId         String   @unique // Foreign key to Auth service User
+  plan            String   @default("STARTER") // STARTER, GROWTH, PRO
+  status          String   @default("ACTIVE") // ACTIVE, CANCELLED, PAST_DUE
+  price           Float
+  billingCycle    String   @default("Monthly")
+  nextBillingDate DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  payments        SubscriptionPayment[]
+}
+
+model SubscriptionPayment {
+  id              String       @id @default(uuid())
+  subscriptionId  String
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Float
+  method          String
+  status          String       @default("PAID")
+  date            DateTime     @default(now())
+}

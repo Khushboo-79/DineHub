@@ -159,4 +159,148 @@ export class InventoryService {
       }
     }
   }
+
+  // --- Suppliers ---
+
+  async createSupplier(ownerId: string, dto: import('./dto/supplier.dto.js').CreateSupplierDto) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    return this.prisma.supplier.create({
+      data: {
+        ...dto,
+        restaurantId,
+      },
+    });
+  }
+
+  async getSuppliers(ownerId: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    return this.prisma.supplier.findMany({
+      where: { restaurantId },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getSupplierById(ownerId: string, id: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    const supplier = await this.prisma.supplier.findFirst({
+      where: { id, restaurantId },
+    });
+    if (!supplier) throw new NotFoundException('Supplier not found');
+    return supplier;
+  }
+
+  async updateSupplier(ownerId: string, id: string, dto: import('./dto/supplier.dto.js').UpdateSupplierDto) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    const supplier = await this.prisma.supplier.findFirst({
+      where: { id, restaurantId },
+    });
+    if (!supplier) throw new NotFoundException('Supplier not found');
+    
+    return this.prisma.supplier.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async deleteSupplier(ownerId: string, id: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    const supplier = await this.prisma.supplier.findFirst({
+      where: { id, restaurantId },
+    });
+    if (!supplier) throw new NotFoundException('Supplier not found');
+
+    await this.prisma.supplier.delete({
+      where: { id },
+    });
+    return { message: 'Supplier deleted successfully' };
+  }
+
+  // --- Purchases ---
+
+  async createPurchase(ownerId: string, dto: import('./dto/purchase.dto.js').CreatePurchaseDto) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    
+    // Generate purchase ID, e.g., PUR-1024
+    const count = await this.prisma.purchase.count();
+    const purchaseId = `PUR-${1000 + count + 1}`;
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Create Purchase
+      const purchase = await tx.purchase.create({
+        data: {
+          restaurantId,
+          purchaseId,
+          supplierId: dto.supplierId,
+          invoiceNumber: dto.invoiceNumber,
+          date: dto.date ? new Date(dto.date) : new Date(),
+          totalAmount: dto.totalAmount,
+          status: dto.status,
+          items: {
+            create: dto.items.map(item => ({
+              inventoryItemId: item.inventoryItemId,
+              quantity: item.quantity,
+              rate: item.rate,
+              tax: item.tax,
+              total: item.total
+            }))
+          }
+        },
+        include: {
+          items: true,
+          supplier: true
+        }
+      });
+
+      // 2. Update Inventory Stock
+      for (const item of dto.items) {
+        await tx.inventoryItem.update({
+          where: { id: item.inventoryItemId },
+          data: {
+            currentStock: { increment: item.quantity },
+            purchasePrice: item.rate // Update the purchase price to the latest rate
+          }
+        });
+      }
+
+      // 3. Update Supplier Financials
+      let pendingIncrement = 0;
+      if (dto.status === 'Pending') pendingIncrement = dto.totalAmount;
+      // If partial, UI should theoretically send the amount paid, but since it's just 'Partial', we'll assume it's entirely pending for now or handled elsewhere. Let's assume full amount is pending if not paid.
+      if (dto.status === 'Partial') pendingIncrement = dto.totalAmount; 
+
+      await tx.supplier.update({
+        where: { id: dto.supplierId },
+        data: {
+          totalPurchase: { increment: dto.totalAmount },
+          pendingAmount: { increment: pendingIncrement }
+        }
+      });
+
+      return purchase;
+    });
+  }
+
+  async getPurchases(ownerId: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    return this.prisma.purchase.findMany({
+      where: { restaurantId },
+      include: { supplier: true },
+      orderBy: { date: 'desc' }
+    });
+  }
+
+  async getPurchaseById(ownerId: string, id: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    const purchase = await this.prisma.purchase.findFirst({
+      where: { id, restaurantId },
+      include: {
+        supplier: true,
+        items: {
+          include: { inventoryItem: true }
+        }
+      }
+    });
+    if (!purchase) throw new NotFoundException('Purchase not found');
+    return purchase;
+  }
 }

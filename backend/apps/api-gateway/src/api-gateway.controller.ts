@@ -37,6 +37,30 @@ export class ApiGatewayController {
     return this.authClient.send({ cmd: 'verify_otp' }, body);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('auth/profile')
+  getProfile(@Request() req: any) {
+    return this.authClient.send({ cmd: 'get_profile' }, { userId: req.user.sub });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('auth/profile')
+  editProfile(@Request() req: any, @Body() body: any) {
+    return this.authClient.send({ cmd: 'edit_profile' }, { userId: req.user.sub, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('auth/change-password')
+  changePassword(@Request() req: any, @Body() body: any) {
+    return this.authClient.send({ cmd: 'change_password' }, { userId: req.user.sub, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('auth/logout')
+  logout(@Request() req: any) {
+    return this.authClient.send({ cmd: 'logout' }, { userId: req.user.sub });
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER')
   @Post('restaurants/setup')
@@ -227,5 +251,141 @@ export class ApiGatewayController {
   getInvoiceById(@Request() req: any, @Param('id') id: string) {
     const ownerId = req.user.sub;
     return this.billingClient.send({ cmd: 'get_invoice_by_id' }, { ownerId, id });
+  }
+
+  // --- Subscription ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER')
+  @Get('billing/subscription')
+  getSubscription(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'get_subscription' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER')
+  @Post('billing/subscription/change-plan')
+  changePlan(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'change_plan' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER')
+  @Post('billing/subscription/cancel')
+  cancelSubscription(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'cancel_subscription' }, { ownerId });
+  }
+
+  // --- Staff Management (Auth Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('staff')
+  createStaff(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.authClient.send({ cmd: 'create_staff' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('staff')
+  getStaff(@Request() req: any, @Query('role') role?: string) {
+    const ownerId = req.user.sub;
+    return this.authClient.send({ cmd: 'get_staff' }, { ownerId, role });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('staff/:id')
+  getStaffById(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.authClient.send({ cmd: 'get_staff_by_id' }, { ownerId, staffId: id });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Patch('staff/:id')
+  updateStaff(@Request() req: any, @Param('id') id: string, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.authClient.send({ cmd: 'update_staff' }, { ownerId, staffId: id, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Delete('staff/:id')
+  deleteStaff(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.authClient.send({ cmd: 'delete_staff' }, { ownerId, staffId: id });
+  }
+
+  // --- Suppliers (Inventory Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Post('inventory/suppliers')
+  createSupplier(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'create_supplier' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('inventory/suppliers')
+  getSuppliers(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_suppliers' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('inventory/suppliers/:id')
+  getSupplierById(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_supplier_by_id' }, { ownerId, id });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Patch('inventory/suppliers/:id')
+  updateSupplier(@Request() req: any, @Param('id') id: string, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'update_supplier' }, { ownerId, id, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Delete('inventory/suppliers/:id')
+  deleteSupplier(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'delete_supplier' }, { ownerId, id });
+  }
+
+  // --- Purchases (Inventory Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Post('inventory/purchases')
+  createPurchase(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'create_purchase' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('inventory/purchases')
+  getPurchases(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_purchases' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('inventory/purchases/:id')
+  getPurchaseById(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_purchase_by_id' }, { ownerId, id });
   }
 }

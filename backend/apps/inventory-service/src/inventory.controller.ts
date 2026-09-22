@@ -39,4 +39,48 @@ export class InventoryController {
     console.log(`[RabbitMQ] Received order_placed event for Order ID: ${order.id}`);
     await this.inventoryService.deductInventoryForOrder(order);
   }
+
+  // --- Suppliers ---
+
+  @MessagePattern({ cmd: 'create_supplier' })
+  createSupplier(@Payload() data: { ownerId: string; dto: import('./dto/supplier.dto.js').CreateSupplierDto }) {
+    return this.inventoryService.createSupplier(data.ownerId, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'get_suppliers' })
+  getSuppliers(@Payload() data: { ownerId: string }) {
+    return this.inventoryService.getSuppliers(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'get_supplier_by_id' })
+  getSupplierById(@Payload() data: { ownerId: string; id: string }) {
+    return this.inventoryService.getSupplierById(data.ownerId, data.id);
+  }
+
+  @MessagePattern({ cmd: 'update_supplier' })
+  updateSupplier(@Payload() data: { ownerId: string; id: string; dto: import('./dto/supplier.dto.js').UpdateSupplierDto }) {
+    return this.inventoryService.updateSupplier(data.ownerId, data.id, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'delete_supplier' })
+  deleteSupplier(@Payload() data: { ownerId: string; id: string }) {
+    return this.inventoryService.deleteSupplier(data.ownerId, data.id);
+  }
+
+  // --- Purchases ---
+
+  @MessagePattern({ cmd: 'create_purchase' })
+  createPurchase(@Payload() data: { ownerId: string; dto: import('./dto/purchase.dto.js').CreatePurchaseDto }) {
+    return this.inventoryService.createPurchase(data.ownerId, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'get_purchases' })
+  getPurchases(@Payload() data: { ownerId: string }) {
+    return this.inventoryService.getPurchases(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'get_purchase_by_id' })
+  getPurchaseById(@Payload() data: { ownerId: string; id: string }) {
+    return this.inventoryService.getPurchaseById(data.ownerId, data.id);
+  }
 }
