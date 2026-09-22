@@ -25,4 +25,49 @@ model InventoryItem {
   notes           String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  purchaseItems   PurchaseItem[]
+}
+
+model Supplier {
+  id              String      @id @default(uuid())
+  restaurantId    String
+  name            String
+  category        String?
+  mobile          String
+  email           String?
+  address         String?
+  gstNumber       String?
+  status          String      @default("ACTIVE")
+  totalPurchase   Float       @default(0)
+  pendingAmount   Float       @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  purchases       Purchase[]
+}
+
+model Purchase {
+  id              String         @id @default(uuid())
+  restaurantId    String
+  purchaseId      String         @unique // e.g. PUR-1024
+  supplierId      String
+  supplier        Supplier       @relation(fields: [supplierId], references: [id])
+  invoiceNumber   String?
+  date            DateTime       @default(now())
+  totalAmount     Float
+  status          String         // 'Paid', 'Pending', 'Partial'
+  items           PurchaseItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model PurchaseItem {
+  id              String         @id @default(uuid())
+  purchaseId      String
+  purchase        Purchase       @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [id])
+  quantity        Float
+  rate            Float
+  tax             Float          // percentage e.g. 5
+  total           Float
 }

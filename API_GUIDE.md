@@ -60,6 +60,55 @@ This API validates the OTP. If the user doesn't exist yet, it creates their acco
 > [!IMPORTANT]
 > Save the `access_token` you receive when you login or register. In future API modules (like updating the Restaurant Profile or managing Staff), you will need to pass this token in the `Authorization` header as a Bearer token!
 
+### 1.3 Get Profile
+Fetches the currently authenticated user's profile details.
+
+- **URL:** `http://localhost:3000/auth/profile`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 1.4 Edit Profile
+Update the user's name, email, and base64 profile image.
+
+- **URL:** `http://localhost:3000/auth/profile`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "ownerName": "Aarav Sharma",
+  "email": "aarav@dinehub.in",
+  "profileImage": "data:image/png;base64,iVBORw0K..."
+}
+```
+
+### 1.5 Change Password
+Allows the user to set or change their password.
+
+- **URL:** `http://localhost:3000/auth/change-password`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "currentPassword": "oldpass123",
+  "newPassword": "newpass456"
+}
+```
+
+### 1.6 Logout
+Log out the user. The client should clear the token upon receiving a success response.
+
+- **URL:** `http://localhost:3000/auth/logout`
+- **Method:** `POST`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
 ---
 
 ## 2. Restaurant Module
@@ -313,6 +362,216 @@ Remove an item from inventory tracking completely.
 
 - **URL:** `http://localhost:3000/inventory/:id`
 - **Method:** `DELETE`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
+## 6. Subscription Management Module
+
+### 6.1 Get Current Subscription
+Fetches the restaurant's active SaaS subscription plan, payment history, and a list of all available plans for upgrade.
+
+- **URL:** `http://localhost:3000/billing/subscription`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 6.2 Change Plan
+Upgrades or downgrades the current subscription plan.
+
+- **URL:** `http://localhost:3000/billing/subscription/change-plan`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "plan": "PRO"
+}
+```
+
+### 6.3 Cancel Subscription
+Cancels the active SaaS subscription.
+
+- **URL:** `http://localhost:3000/billing/subscription/cancel`
+- **Method:** `POST`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
+## 7. Staff Management Module
+
+### 7.1 Create Staff
+Adds a new staff member to the restaurant.
+
+- **URL:** `http://localhost:3000/staff`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "ownerName": "Aarav Sharma",
+  "mobileNumber": "+919876543210",
+  "email": "aarav@example.com",
+  "role": "OWNER",
+  "salary": 50000,
+  "joiningDate": "2025-10-10"
+}
+```
+
+### 7.2 Get All Staff
+Fetches all staff members belonging to the restaurant. You can optionally filter by role.
+
+- **URL:** `http://localhost:3000/staff?role=MANAGER`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 7.3 Get Staff by ID
+Fetches details of a specific staff member.
+
+- **URL:** `http://localhost:3000/staff/:id`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 7.4 Update Staff
+Updates a staff member's details or status.
+
+- **URL:** `http://localhost:3000/staff/:id`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "status": "INACTIVE"
+}
+```
+
+### 7.5 Delete Staff
+Removes a staff member entirely.
+
+- **URL:** `http://localhost:3000/staff/:id`
+- **Method:** `DELETE`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
+## 8. Supplier Management Module (Inventory Service)
+
+### 8.1 Create Supplier
+Adds a new supplier for inventory tracking.
+
+- **URL:** `http://localhost:3000/inventory/suppliers`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "name": "Fresh Foods Co.",
+  "category": "Groceries & Vegetables",
+  "mobile": "+919876543210",
+  "email": "freshfoods@gmail.com",
+  "address": "#12, Green Park, Bangalore - 560001",
+  "gstNumber": "29ABCDE1234F1Z5",
+  "totalPurchase": 45280,
+  "pendingAmount": 2500
+}
+```
+
+### 8.2 Get All Suppliers
+Fetches all suppliers belonging to the restaurant.
+
+- **URL:** `http://localhost:3000/inventory/suppliers`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 8.3 Get Supplier by ID
+Fetches details of a specific supplier.
+
+- **URL:** `http://localhost:3000/inventory/suppliers/:id`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 8.4 Update Supplier
+Updates a supplier's details.
+
+- **URL:** `http://localhost:3000/inventory/suppliers/:id`
+- **Method:** `PATCH`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "pendingAmount": 0
+}
+```
+
+### 8.5 Delete Supplier
+Removes a supplier entirely.
+
+- **URL:** `http://localhost:3000/inventory/suppliers/:id`
+- **Method:** `DELETE`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
+## 9. Purchases Management Module (Inventory Service)
+
+### 9.1 Create Purchase
+Records a new purchase from a supplier. Automatically updates the supplier's financial stats and the stock levels of the purchased inventory items.
+
+- **URL:** `http://localhost:3000/inventory/purchases`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "supplierId": "SUPPLIER_ID_HERE",
+  "invoiceNumber": "INV-2026-001",
+  "totalAmount": 1470,
+  "status": "Paid",
+  "items": [
+    {
+      "inventoryItemId": "ITEM_ID_HERE",
+      "quantity": 10,
+      "rate": 40,
+      "tax": 5,
+      "total": 420
+    }
+  ]
+}
+```
+
+### 9.2 Get All Purchases
+Fetches all purchases made by the restaurant, including supplier details.
+
+- **URL:** `http://localhost:3000/inventory/purchases`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+
+### 9.3 Get Purchase by ID
+Fetches details of a specific purchase, including all purchased items and their inventory details.
+
+- **URL:** `http://localhost:3000/inventory/purchases/:id`
+- **Method:** `GET`
 - **Headers:** 
   - `Authorization: Bearer <your_access_token_here>`
 

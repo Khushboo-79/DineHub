@@ -27,4 +27,21 @@ export class BillingServiceController {
   getInvoiceById(@Payload() data: { ownerId: string; id: string }) {
     return this.billingService.getInvoiceById(data.ownerId, data.id);
   }
+
+  // --- Subscription Endpoints ---
+
+  @MessagePattern({ cmd: 'get_subscription' })
+  getSubscription(@Payload() data: { ownerId: string }) {
+    return this.billingService.getSubscription(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'change_plan' })
+  changePlan(@Payload() data: { ownerId: string; dto: import('./dto/subscription.dto.js').ChangePlanDto }) {
+    return this.billingService.changePlan(data.ownerId, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'cancel_subscription' })
+  cancelSubscription(@Payload() data: { ownerId: string }) {
+    return this.billingService.cancelSubscription(data.ownerId);
+  }
 }
