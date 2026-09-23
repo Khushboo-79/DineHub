@@ -159,6 +159,14 @@ export class ApiGatewayController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER', 'STAFF')
+  @Get('inventory-analytics/overview')
+  getInventoryAnalytics(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_inventory_analytics' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER', 'STAFF')
   @Post('orders')
   async createOrder(@Request() req: any, @Body() body: any) {
     const ownerId = req.user.sub;
@@ -387,5 +395,67 @@ export class ApiGatewayController {
   getPurchaseById(@Request() req: any, @Param('id') id: string) {
     const ownerId = req.user.sub;
     return this.inventoryClient.send({ cmd: 'get_purchase_by_id' }, { ownerId, id });
+  }
+
+  // --- Recipes (Inventory Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('inventory/recipes')
+  createRecipe(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'create_recipe' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF', 'CHEF')
+  @Get('inventory/recipes/:menuItemId')
+  getRecipeByMenuItemId(@Request() req: any, @Param('menuItemId') menuItemId: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_recipe_by_menu_item_id' }, { ownerId, menuItemId });
+  }
+
+  // --- Analytics ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('analytics/overview')
+  async getAnalyticsOverview(@Request() req: any, @Query('timeframe') timeframe: string = 'today') {
+    const ownerId = req.user.sub;
+    return this.orderClient.send({ cmd: 'get_analytics_overview' }, { ownerId, timeframe });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('analytics/recent-orders')
+  async getRecentOrders(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.orderClient.send({ cmd: 'get_recent_orders_analytics' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('analytics/top-items')
+  async getTopSellingItems(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.orderClient.send({ cmd: 'get_top_selling_items' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('analytics/low-stock')
+  async getLowStockAlerts(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_low_stock_alerts' }, { ownerId });
+  }
+
+  // --- Reports ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('reports/sales')
+  async getSalesReport(@Request() req: any, @Query('timeframe') timeframe: string = 'today') {
+    const ownerId = req.user.sub;
+    return this.orderClient.send({ cmd: 'get_sales_report' }, { ownerId, timeframe });
   }
 }

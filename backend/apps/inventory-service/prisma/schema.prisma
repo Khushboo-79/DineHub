@@ -26,6 +26,7 @@ model InventoryItem {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   purchaseItems   PurchaseItem[]
+  recipeItems     RecipeItem[]
 }
 
 model Supplier {
@@ -70,4 +71,22 @@ model PurchaseItem {
   rate            Float
   tax             Float          // percentage e.g. 5
   total           Float
+}
+
+model Recipe {
+  id              String         @id @default(uuid())
+  restaurantId    String
+  menuItemId      String         @unique // One recipe per menu item
+  items           RecipeItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model RecipeItem {
+  id              String         @id @default(uuid())
+  recipeId        String
+  recipe          Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [id])
+  quantity        Float          // How much of the inventory item is used
 }

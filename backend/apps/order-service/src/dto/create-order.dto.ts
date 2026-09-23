@@ -5,6 +5,10 @@ import { OrderSource, PaymentMethod, PaymentStatus } from '@prisma/client';
 class OrderItemDto {
   @IsString()
   @IsNotEmpty()
+  menuItemId: string;
+
+  @IsString()
+  @IsNotEmpty()
   itemName: string;
 
   @IsArray()

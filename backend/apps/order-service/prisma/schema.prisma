@@ -61,6 +61,7 @@ model OrderItem {
   id          String   @id @default(uuid())
   orderId     String
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId  String
   itemName    String
   addons      String[] // Array of addon names chosen
   qty         Int      @default(1)

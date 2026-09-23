@@ -79,6 +79,7 @@ export class OrdersService {
     }
 
     const itemsData = dto.items.map(item => ({
+      menuItemId: item.menuItemId,
       itemName: item.itemName,
       addons: item.addons || [],
       qty: item.qty,
@@ -181,5 +182,192 @@ export class OrdersService {
         ...(dto.paymentStatus ? { paymentStatus: dto.paymentStatus } : {}),
       },
     });
+  }
+
+  async getAnalyticsOverview(ownerId: string, timeframe: string = 'today') {
+    const outletId = await this.getOutletId(ownerId);
+
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    if (timeframe === 'week') startDate.setDate(startDate.getDate() - 7);
+    else if (timeframe === 'month') startDate.setDate(startDate.getDate() - 30);
+
+    const orders = await this.prisma.order.findMany({
+      where: { outletId, createdAt: { gte: startDate } }
+    });
+
+    let todaysSales = 0;
+    let todaysOrders = orders.length;
+    let pendingOrders = 0;
+    const salesChartMap = new Map<string, number>();
+
+    orders.forEach(order => {
+      if (order.status === 'NEW' || order.status === 'PREPARING') pendingOrders++;
+      
+      if (order.status !== 'CANCELLED') {
+        todaysSales += order.totalAmount;
+        let timeKey = '';
+        if (timeframe === 'today') {
+          let hour = order.createdAt.getHours();
+          let ampm = hour >= 12 ? 'PM' : 'AM';
+          hour = hour % 12;
+          hour = hour ? hour : 12;
+          timeKey = `${hour} ${ampm}`;
+        } else {
+          timeKey = order.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        salesChartMap.set(timeKey, (salesChartMap.get(timeKey) || 0) + order.totalAmount);
+      }
+    });
+
+    const averageOrderValue = todaysOrders > 0 ? Math.round(todaysSales / todaysOrders) : 0;
+    const salesChart = Array.from(salesChartMap.entries()).map(([time, sales]) => ({ time, sales }));
+
+    return {
+      overview: { todaysSales, todaysOrders, pendingOrders, averageOrderValue },
+      salesChart
+    };
+  }
+
+  async getRecentOrdersAnalytics(ownerId: string) {
+    const outletId = await this.getOutletId(ownerId);
+    const orders = await this.prisma.order.findMany({
+      where: { outletId },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    return orders.map(o => ({
+      orderId: o.orderNumber,
+      customer: o.customerName || 'Walk-in',
+      status: o.status
+    }));
+  }
+
+  async getTopSellingItems(ownerId: string) {
+    const outletId = await this.getOutletId(ownerId);
+    const orders = await this.prisma.order.findMany({
+      where: { outletId },
+      include: { items: true }
+    });
+
+    const itemSalesMap = new Map<string, number>();
+    orders.forEach(order => {
+      if (order.status !== 'CANCELLED') {
+        order.items.forEach(item => {
+          itemSalesMap.set(item.itemName, (itemSalesMap.get(item.itemName) || 0) + item.qty);
+        });
+      }
+    });
+
+    return Array.from(itemSalesMap.entries())
+      .map(([name, orders]) => ({ name, orders, image: null }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 4);
+  }
+
+  // --- Reports ---
+
+  private calculateTrend(current: number, previous: number): { value: number, trend: number, trendDirection: 'up' | 'down' | 'flat' } {
+    if (previous === 0) return { value: current, trend: current > 0 ? 100 : 0, trendDirection: current > 0 ? 'up' : 'flat' };
+    const diff = current - previous;
+    const trend = Math.round(Math.abs((diff / previous) * 100));
+    return {
+      value: current,
+      trend,
+      trendDirection: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat'
+    };
+  }
+
+  async getSalesReport(ownerId: string, timeframe: string = 'today') {
+    const outletId = await this.getOutletId(ownerId);
+
+    const now = new Date();
+    let currentStart = new Date(now);
+    currentStart.setHours(0, 0, 0, 0);
+
+    let previousStart = new Date(currentStart);
+    let previousEnd = new Date(currentStart);
+
+    if (timeframe === 'week') {
+      currentStart.setDate(currentStart.getDate() - 7);
+      previousStart.setDate(currentStart.getDate() - 7);
+      previousEnd = new Date(currentStart);
+    } else if (timeframe === 'month') {
+      currentStart.setDate(currentStart.getDate() - 30);
+      previousStart.setDate(currentStart.getDate() - 30);
+      previousEnd = new Date(currentStart);
+    } else {
+      // today
+      previousStart.setDate(currentStart.getDate() - 1);
+      previousEnd = new Date(currentStart);
+    }
+
+    // Fetch orders for current period
+    const currentOrders = await this.prisma.order.findMany({
+      where: { outletId, createdAt: { gte: currentStart } }
+    });
+
+    // Fetch orders for previous period
+    const previousOrders = await this.prisma.order.findMany({
+      where: { outletId, createdAt: { gte: previousStart, lt: previousEnd } }
+    });
+
+    // Calculate Current Metrics
+    let currRev = 0, currDiscounts = 0, currTax = 0;
+    let currCount = 0;
+    const salesGraphMap = new Map<string, number>();
+    const orderGraphMap = new Map<string, number>();
+
+    currentOrders.forEach(o => {
+      if (o.status !== 'CANCELLED') {
+        currRev += o.totalAmount;
+        currDiscounts += (o.discount || 0);
+        currTax += (o.gst || 0);
+        currCount++;
+
+        let timeKey = '';
+        if (timeframe === 'today') {
+          let hour = o.createdAt.getHours();
+          let ampm = hour >= 12 ? 'PM' : 'AM';
+          hour = hour % 12;
+          hour = hour ? hour : 12;
+          timeKey = `${hour} ${ampm}`;
+        } else {
+          timeKey = o.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        salesGraphMap.set(timeKey, (salesGraphMap.get(timeKey) || 0) + o.totalAmount);
+        orderGraphMap.set(timeKey, (orderGraphMap.get(timeKey) || 0) + 1);
+      }
+    });
+
+    const currAOV = currCount > 0 ? Math.round(currRev / currCount) : 0;
+
+    // Calculate Previous Metrics
+    let prevRev = 0, prevDiscounts = 0, prevTax = 0;
+    let prevCount = 0;
+    previousOrders.forEach(o => {
+      if (o.status !== 'CANCELLED') {
+        prevRev += o.totalAmount;
+        prevDiscounts += (o.discount || 0);
+        prevTax += (o.gst || 0);
+        prevCount++;
+      }
+    });
+    const prevAOV = prevCount > 0 ? Math.round(prevRev / prevCount) : 0;
+
+    return {
+      summary: {
+        revenue: this.calculateTrend(currRev, prevRev),
+        orders: this.calculateTrend(currCount, prevCount),
+        averageOrderValue: this.calculateTrend(currAOV, prevAOV),
+        discount: this.calculateTrend(currDiscounts, prevDiscounts),
+        tax: this.calculateTrend(currTax, prevTax)
+      },
+      salesGraph: Array.from(salesGraphMap.entries()).map(([time, revenue]) => ({ time, revenue })),
+      orderGraph: Array.from(orderGraphMap.entries()).map(([time, orders]) => ({ time, orders }))
+    };
   }
 }
