@@ -83,4 +83,28 @@ export class InventoryController {
   getPurchaseById(@Payload() data: { ownerId: string; id: string }) {
     return this.inventoryService.getPurchaseById(data.ownerId, data.id);
   }
+
+  // --- Recipes ---
+
+  @MessagePattern({ cmd: 'create_recipe' })
+  createRecipe(@Payload() data: { ownerId: string; dto: import('./dto/recipe.dto.js').CreateRecipeDto }) {
+    return this.inventoryService.createRecipe(data.ownerId, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'get_recipe_by_menu_item_id' })
+  getRecipeByMenuItemId(@Payload() data: { ownerId: string; menuItemId: string }) {
+    return this.inventoryService.getRecipeByMenuItemId(data.ownerId, data.menuItemId);
+  }
+
+  // --- Analytics ---
+
+  @MessagePattern({ cmd: 'get_low_stock_alerts' })
+  getLowStockAlerts(@Payload() data: { ownerId: string }) {
+    return this.inventoryService.getLowStockAlerts(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'get_inventory_analytics' })
+  getInventoryAnalytics(@Payload() data: { ownerId: string }) {
+    return this.inventoryService.getInventoryAnalytics(data.ownerId);
+  }
 }

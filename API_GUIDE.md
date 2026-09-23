@@ -577,4 +577,127 @@ Fetches details of a specific purchase, including all purchased items and their 
 
 ---
 
+## 10. Recipe Management Module (Inventory Service)
+
+### 10.1 Create or Update Recipe
+Links an inventory items to a specific menu item. This allows the system to auto-deduct raw materials when an order is placed. If a recipe already exists for the given `menuItemId`, it will be completely overwritten.
+
+- **URL:** `http://localhost:3000/inventory/recipes`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "menuItemId": "MENU_ITEM_ID_HERE",
+  "items": [
+    {
+      "inventoryItemId": "INVENTORY_ITEM_ID_HERE",
+      "quantity": 0.5
+    },
+    {
+      "inventoryItemId": "ANOTHER_INVENTORY_ITEM_ID_HERE",
+      "quantity": 2
+    }
+  ]
+}
+```
+
+### 10.2 Get Recipe by Menu Item ID
+Fetches the recipe components for a specific menu item.
+
+- **URL:** `http://localhost:3000/inventory/recipes/:menuItemId`
+- **Method:** `GET`
+- **Headers:** 
+  - `Authorization: Bearer <your_access_token_here>`
+  - `Authorization: Bearer <your_access_token_here>`
+
+---
+
+## 11. Analytics & Dashboard
+
+### 11.1 Get Analytics Overview (Cards & Chart)
+Fetches the top 4 cards data and the sales chart points.
+
+- **URL:** `http://localhost:3000/analytics/overview`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+- **Query Parameters:** `timeframe` (optional, default='today'): Can be `today`, `week`, or `month`.
+
+### 11.2 Get Recent Orders
+Fetches the 5 most recent orders for the dashboard list.
+
+- **URL:** `http://localhost:3000/analytics/recent-orders`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 11.3 Get Top Selling Items
+Fetches the top 4 selling menu items based on order volume.
+
+- **URL:** `http://localhost:3000/analytics/top-items`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 11.4 Get Low Stock Alerts
+Fetches inventory items that are running out of stock or have hit zero.
+
+- **URL:** `http://localhost:3000/analytics/low-stock`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+---
+
+## 12. Inventory Analytics
+
+### 12.1 Get Inventory Overview Analytics
+Fetches the top 4 cards for the Inventory screen.
+
+- **URL:** `http://localhost:3000/inventory-analytics/overview`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+**Sample Response:**
+```json
+{
+  "totalItems": 120,
+  "lowStock": 8,
+  "outOfStock": 4,
+  "inventoryValue": 48320
+}
+```
+
+---
+
+## 13. Reports
+
+### 13.1 Get Sales Report
+Fetches the detailed Sales Report metrics including trends (% vs last period) and graph data.
+
+- **URL:** `http://localhost:3000/reports/sales`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+- **Query Parameters:** `timeframe` (optional, default='today'): Can be `today`, `week`, or `month`.
+
+**Sample Response:**
+```json
+{
+  "summary": {
+    "revenue": { "value": 48320, "trend": 12, "trendDirection": "up" },
+    "orders": { "value": 62, "trend": 8, "trendDirection": "up" },
+    "averageOrderValue": { "value": 780, "trend": 5, "trendDirection": "up" },
+    "discount": { "value": 2400, "trend": 15, "trendDirection": "up" },
+    "tax": { "value": 3120, "trend": 10, "trendDirection": "up" }
+  },
+  "salesGraph": [
+    { "time": "12 AM", "revenue": 12000 }
+  ],
+  "orderGraph": [
+    { "time": "12 AM", "orders": 10 }
+  ]
+}
+```
+
+---
+
 *Note: This document will be continually updated as we build more features.*

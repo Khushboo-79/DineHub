@@ -142,20 +142,25 @@ export class InventoryService {
   async deductInventoryForOrder(order: any) {
     if (!order || !order.items || order.items.length === 0) return;
     
-    // In a real application, you'd map order.items to inventory items.
-    // For this demonstration, we'll try to find an inventory item with the same name.
     for (const orderItem of order.items) {
-      const inventoryItem = await this.prisma.inventoryItem.findFirst({
-        where: { name: orderItem.itemName },
+      if (!orderItem.menuItemId) continue;
+
+      const recipe = await this.prisma.recipe.findFirst({
+        where: { menuItemId: orderItem.menuItemId },
+        include: { items: true },
       });
       
-      if (inventoryItem) {
-        const newStock = Math.max(0, inventoryItem.currentStock - orderItem.qty);
-        await this.prisma.inventoryItem.update({
-          where: { id: inventoryItem.id },
-          data: { currentStock: newStock },
-        });
-        console.log(`[RabbitMQ] Deducted ${orderItem.qty} from ${inventoryItem.name}. New Stock: ${newStock}`);
+      if (recipe) {
+        for (const recipeItem of recipe.items) {
+          const deduction = recipeItem.quantity * orderItem.qty;
+          await this.prisma.inventoryItem.update({
+            where: { id: recipeItem.inventoryItemId },
+            data: { currentStock: { decrement: deduction } },
+          });
+          console.log(`[RabbitMQ] Deducted ${deduction} from inventoryItem ${recipeItem.inventoryItemId} for ${orderItem.itemName}`);
+        }
+      } else {
+        console.log(`[RabbitMQ] No recipe found for menuItemId ${orderItem.menuItemId}`);
       }
     }
   }
@@ -302,5 +307,117 @@ export class InventoryService {
     });
     if (!purchase) throw new NotFoundException('Purchase not found');
     return purchase;
+  }
+
+  // --- Recipes ---
+
+  async createRecipe(ownerId: string, dto: import('./dto/recipe.dto.js').CreateRecipeDto) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+
+    // If recipe exists for this menuItemId, update it (by deleting old items and recreating)
+    const existingRecipe = await this.prisma.recipe.findFirst({
+      where: { menuItemId: dto.menuItemId, restaurantId }
+    });
+
+    if (existingRecipe) {
+      return this.prisma.recipe.update({
+        where: { id: existingRecipe.id },
+        data: {
+          items: {
+            deleteMany: {},
+            create: dto.items.map(item => ({
+              inventoryItemId: item.inventoryItemId,
+              quantity: item.quantity
+            }))
+          }
+        },
+        include: { items: true }
+      });
+    }
+
+    return this.prisma.recipe.create({
+      data: {
+        restaurantId,
+        menuItemId: dto.menuItemId,
+        items: {
+          create: dto.items.map(item => ({
+            inventoryItemId: item.inventoryItemId,
+            quantity: item.quantity
+          }))
+        }
+      },
+      include: { items: true }
+    });
+  }
+
+  async getRecipeByMenuItemId(ownerId: string, menuItemId: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    const recipe = await this.prisma.recipe.findFirst({
+      where: { menuItemId, restaurantId },
+      include: {
+        items: {
+          include: { inventoryItem: true }
+        }
+      }
+    });
+    if (!recipe) throw new NotFoundException('Recipe not found');
+    return recipe;
+  }
+
+  // --- Analytics ---
+
+  async getLowStockAlerts(ownerId: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    
+    // Find items where currentStock <= reorderLevel or currentStock == 0
+    const items = await this.prisma.inventoryItem.findMany({
+      where: {
+        restaurantId,
+      }
+    });
+
+    const alerts = items
+      .filter(item => item.currentStock <= 0 || (item.reorderLevel !== null && item.currentStock <= item.reorderLevel))
+      .map(item => ({
+        name: item.name,
+        stockLeft: `${item.currentStock} ${item.unit} left`,
+        status: item.currentStock <= 0 ? 'Out of Stock' : 'Low Stock',
+        image: item.image
+      }))
+      .slice(0, 4); // Only top 4 for dashboard
+
+    return alerts;
+  }
+
+  async getInventoryAnalytics(ownerId: string) {
+    const restaurantId = await this.getRestaurantId(ownerId);
+    
+    const items = await this.prisma.inventoryItem.findMany({
+      where: { restaurantId }
+    });
+
+    let totalItems = items.length;
+    let lowStock = 0;
+    let outOfStock = 0;
+    let inventoryValue = 0;
+
+    items.forEach(item => {
+      if (item.currentStock <= 0) {
+        outOfStock++;
+      } else if (item.reorderLevel !== null && item.currentStock <= item.reorderLevel) {
+        lowStock++;
+      }
+
+      if (item.currentStock > 0) {
+        inventoryValue += (item.currentStock * item.purchasePrice);
+      }
+    });
+
+    return {
+      totalItems,
+      lowStock,
+      outOfStock,
+      inventoryValue: Math.round(inventoryValue)
+    };
   }
 }

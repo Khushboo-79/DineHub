@@ -28,4 +28,26 @@ export class OrdersController {
   updateOrderStatus(@Payload() data: { ownerId: string; id: string; dto: UpdateOrderStatusDto }) {
     return this.ordersService.updateOrderStatus(data.ownerId, data.id, data.dto);
   }
+
+  @MessagePattern({ cmd: 'get_analytics_overview' })
+  getAnalyticsOverview(@Payload() data: { ownerId: string; timeframe: string }) {
+    return this.ordersService.getAnalyticsOverview(data.ownerId, data.timeframe);
+  }
+
+  @MessagePattern({ cmd: 'get_recent_orders_analytics' })
+  getRecentOrdersAnalytics(@Payload() data: { ownerId: string }) {
+    return this.ordersService.getRecentOrdersAnalytics(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'get_top_selling_items' })
+  getTopSellingItems(@Payload() data: { ownerId: string }) {
+    return this.ordersService.getTopSellingItems(data.ownerId);
+  }
+
+  // --- Reports ---
+
+  @MessagePattern({ cmd: 'get_sales_report' })
+  getSalesReport(@Payload() data: { ownerId: string; timeframe: string }) {
+    return this.ordersService.getSalesReport(data.ownerId, data.timeframe);
+  }
 }
