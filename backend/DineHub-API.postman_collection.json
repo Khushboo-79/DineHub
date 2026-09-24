@@ -1321,6 +1321,904 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Shift Management",
+			"item": [
+				{
+					"name": "Open Shift",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"restaurantId\": \"{{restaurant_id}}\",\n    \"openingFloat\": 5000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/shifts/open",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shifts",
+								"open"
+							]
+						}
+					}
+				},
+				{
+					"name": "Cash Drop / Payout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shiftId\": \"SHIFT_ID_HERE\",\n    \"amount\": 2000,\n    \"reason\": \"Paid vendor for ice\",\n    \"type\": \"PAYOUT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/shifts/cash-drop",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shifts",
+								"cash-drop"
+							]
+						}
+					}
+				},
+				{
+					"name": "Close Shift",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shiftId\": \"SHIFT_ID_HERE\",\n    \"actualCash\": 12500\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/shifts/close",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shifts",
+								"close"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shifts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/shifts?restaurantId={{restaurant_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shifts"
+							],
+							"query": [
+								{
+									"key": "restaurantId",
+									"value": "{{restaurant_id}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shift Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/shifts/SHIFT_ID_HERE/report",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"shifts",
+								"SHIFT_ID_HERE",
+								"report"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Table & Floor Plan Management",
+			"item": [
+				{
+					"name": "Create Zone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"outletId\": \"{{outlet_id}}\",\n    \"name\": \"Indoor Seating\",\n    \"description\": \"Main dining hall\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/zones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								"zones"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Table",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"zoneId\": \"ZONE_ID_HERE\",\n    \"name\": \"T-01\",\n    \"capacity\": 4\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Live Table Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tables/live-status?outletId={{outlet_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								"live-status"
+							],
+							"query": [
+								{
+									"key": "outletId",
+									"value": "{{outlet_id}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Assign/Update Table Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"OCCUPIED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tables/TABLE_ID_HERE/assign",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tables",
+								"TABLE_ID_HERE",
+								"assign"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Reservation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"outletId\": \"{{outlet_id}}\",\n    \"customerName\": \"Rahul Sharma\",\n    \"customerPhone\": \"9876543210\",\n    \"guestsCount\": 4,\n    \"reservationTime\": \"2026-09-25T19:30:00.000Z\",\n    \"specialRequests\": \"Window seat preferred\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reservations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reservations"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Advanced Kitchen Display System (KDS)",
+			"item": [
+				{
+					"name": "Get Active Tickets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/kds/active-tickets?outletId={{outlet_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"kds",
+								"active-tickets"
+							],
+							"query": [
+								{
+									"key": "outletId",
+									"value": "{{outlet_id}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Item Cooking Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"READY\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/kds/items/ITEM_ID_HERE/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"kds",
+								"items",
+								"ITEM_ID_HERE",
+								"status"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Expediter View",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/kds/expediter?outletId={{outlet_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"kds",
+								"expediter"
+							],
+							"query": [
+								{
+									"key": "outletId",
+									"value": "{{outlet_id}}"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Advanced CRM & Loyalty",
+			"item": [
+				{
+					"name": "Create Customer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Doe\",\n    \"phone\": \"9876543211\",\n    \"email\": \"jane@example.com\",\n    \"loyaltyPoints\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/crm/customers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"crm",
+								"customers"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Customers",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/crm/customers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"crm",
+								"customers"
+							]
+						}
+					}
+				},
+				{
+					"name": "Lookup Customer by Phone",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/crm/customers/9876543211",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"crm",
+								"customers",
+								"9876543211"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add/Deduct Loyalty Points",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"points\": 50\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/crm/customers/CUSTOMER_ID_HERE/points",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"crm",
+								"customers",
+								"CUSTOMER_ID_HERE",
+								"points"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Automated Taxes & Discounts",
+			"item": [
+				{
+					"name": "Create Tax Setting",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"CGST\",\n    \"rate\": 2.5,\n    \"type\": \"PERCENTAGE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/taxes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"taxes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Active Taxes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/taxes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"taxes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Discount Rule",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Happy Hour 10%\",\n    \"value\": 10,\n    \"type\": \"PERCENTAGE\",\n    \"minOrderValue\": 500\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/discounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"discounts"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Active Discounts",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/discounts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"discounts"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Multi-Outlet & HQ Operations",
+			"item": [
+				{
+					"name": "Add New Outlet (Branch)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"DineHub Downtown\",\n  \"openingTime\": \"11:00\",\n  \"closingTime\": \"23:00\",\n  \"services\": [\"DINE_IN\", \"TAKEAWAY\", \"DELIVERY\"],\n  \"cuisines\": [\"Italian\", \"Continental\"],\n  \"hasGST\": true,\n  \"gstin\": \"27AADCB2230M1Z2\",\n  \"fssaiNumber\": \"11519036000213\",\n  \"serviceCharge\": 10,\n  \"invoicePrefix\": \"DH-DT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/restaurants/outlets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"restaurants",
+								"outlets"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Outlets",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/restaurants/outlets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"restaurants",
+								"outlets"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Outlet Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"closingTime\": \"23:30\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/restaurants/outlets/OUTLET_ID_HERE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"restaurants",
+								"outlets",
+								"OUTLET_ID_HERE"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Third-Party Integrations",
+			"item": [
+				{
+					"name": "Sync Menu to Aggregator",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"aggregator\": \"ZOMATO\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/integrations/menu/sync",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"integrations",
+								"menu",
+								"sync"
+							]
+						}
+					}
+				},
+				{
+					"name": "Receive Aggregator Order (Webhook)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"source\": \"SWIGGY\",\n  \"orderNumber\": \"SW-998877\",\n  \"outletId\": \"{{outlet_id}}\",\n  \"customer\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"9988776655\"\n  },\n  \"subtotal\": 450,\n  \"totalAmount\": 500,\n  \"items\": [\n    {\n      \"name\": \"Paneer Tikka\",\n      \"quantity\": 2,\n      \"price\": 225\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/integrations/orders/webhook",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"integrations",
+								"orders",
+								"webhook"
+							]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [

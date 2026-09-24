@@ -69,6 +69,77 @@ export class ApiGatewayController {
     return this.restaurantClient.send({ cmd: 'setup_restaurant' }, { ownerId, dto: body });
   }
 
+  // --- Multi-Outlet Management ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER')
+  @Post('restaurants/outlets')
+  createOutlet(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'create_outlet' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('restaurants/outlets')
+  getOutlets(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'get_outlets' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('restaurants/outlets/:id')
+  getOutletById(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'get_outlet_by_id' }, { ownerId, outletId: id });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER')
+  @Patch('restaurants/outlets/:id')
+  updateOutlet(@Request() req: any, @Param('id') id: string, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'update_outlet' }, { ownerId, outletId: id, dto: body });
+  }
+
+  // --- Table & Floor Plan Management ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('tables/zones')
+  createZone(@Request() req: any, @Body() body: any) {
+    return this.restaurantClient.send({ cmd: 'create_zone' }, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('tables')
+  createTable(@Request() req: any, @Body() body: any) {
+    return this.restaurantClient.send({ cmd: 'create_table' }, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('tables/live-status')
+  getLiveStatus(@Request() req: any, @Query('outletId') outletId: string) {
+    return this.restaurantClient.send({ cmd: 'get_live_status' }, { outletId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Post('reservations')
+  createReservation(@Request() req: any, @Body() body: any) {
+    return this.restaurantClient.send({ cmd: 'create_reservation' }, { outletId: body.outletId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Patch('tables/:id/assign')
+  assignTable(@Request() req: any, @Param('id') tableId: string, @Body('status') status: string) {
+    return this.restaurantClient.send({ cmd: 'assign_table' }, { tableId, status });
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER', 'STAFF')
   @Get('menu')
@@ -224,6 +295,29 @@ export class ApiGatewayController {
     return updatedOrder;
   }
 
+  // --- Advanced Kitchen Display System (KDS) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'CHEF')
+  @Get('kds/active-tickets')
+  getActiveTickets(@Request() req: any, @Query('outletId') outletId: string) {
+    return this.orderClient.send({ cmd: 'get_active_tickets' }, { outletId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'CHEF')
+  @Patch('kds/items/:id/status')
+  updateItemStatus(@Request() req: any, @Param('id') id: string, @Body('status') status: string) {
+    return this.orderClient.send({ cmd: 'update_item_status' }, { itemId: id, status });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('kds/expediter')
+  getExpediterView(@Request() req: any, @Query('outletId') outletId: string) {
+    return this.orderClient.send({ cmd: 'get_expediter_view' }, { outletId });
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER')
   @Post('billing/invoices')
@@ -261,6 +355,74 @@ export class ApiGatewayController {
     return this.billingClient.send({ cmd: 'get_invoice_by_id' }, { ownerId, id });
   }
 
+  // --- Customer Relationship Management (CRM) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Post('crm/customers')
+  createCustomer(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'create_customer' }, { ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('crm/customers')
+  getCustomers(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'get_customers' }, { ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('crm/customers/:phone')
+  getCustomerByPhone(@Request() req: any, @Param('phone') phone: string) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'get_customer_by_phone' }, { ownerId, phone });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('crm/customers/:id/points')
+  updateLoyaltyPoints(@Request() req: any, @Param('id') customerId: string, @Body('points') points: number) {
+    const ownerId = req.user.sub;
+    return this.restaurantClient.send({ cmd: 'update_loyalty_points' }, { ownerId, customerId, points });
+  }
+
+  // --- Taxes & Discounts (Billing Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('taxes')
+  createTax(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'create_tax' }, { restaurantId: ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('taxes')
+  getTaxes(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'get_taxes' }, { restaurantId: ownerId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('discounts')
+  createDiscount(@Request() req: any, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'create_discount' }, { restaurantId: ownerId, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'STAFF')
+  @Get('discounts')
+  getDiscounts(@Request() req: any) {
+    const ownerId = req.user.sub;
+    return this.billingClient.send({ cmd: 'get_discounts' }, { restaurantId: ownerId });
+  }
+
   // --- Subscription ---
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -285,6 +447,46 @@ export class ApiGatewayController {
   cancelSubscription(@Request() req: any) {
     const ownerId = req.user.sub;
     return this.billingClient.send({ cmd: 'cancel_subscription' }, { ownerId });
+  }
+
+  // --- Shift Management (Billing Service) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('shifts/open')
+  openShift(@Request() req: any, @Body() body: any) {
+    const openedById = req.user.sub;
+    return this.billingClient.send({ cmd: 'open_shift' }, { ...body, openedById });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER', 'CASHIER')
+  @Post('shifts/cash-drop')
+  cashDrop(@Request() req: any, @Body() body: any) {
+    const performedById = req.user.sub;
+    return this.billingClient.send({ cmd: 'cash_drop' }, { ...body, performedById });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('shifts/close')
+  closeShift(@Request() req: any, @Body() body: any) {
+    const closedById = req.user.sub;
+    return this.billingClient.send({ cmd: 'close_shift' }, { ...body, closedById });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('shifts')
+  getShifts(@Request() req: any, @Query('restaurantId') restaurantId: string) {
+    return this.billingClient.send({ cmd: 'get_shifts' }, { restaurantId });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Get('shifts/:id/report')
+  getShiftReport(@Request() req: any, @Param('id') shiftId: string) {
+    return this.billingClient.send({ cmd: 'get_shift_report' }, { shiftId });
   }
 
   // --- Staff Management (Auth Service) ---
@@ -457,5 +659,22 @@ export class ApiGatewayController {
   async getSalesReport(@Request() req: any, @Query('timeframe') timeframe: string = 'today') {
     const ownerId = req.user.sub;
     return this.orderClient.send({ cmd: 'get_sales_report' }, { ownerId, timeframe });
+  }
+
+  // --- Third-Party Integrations ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('OWNER', 'MANAGER')
+  @Post('integrations/menu/sync')
+  syncMenu(@Request() req: any, @Body('aggregator') aggregator: string) {
+    const ownerId = req.user.sub;
+    return this.menuClient.send({ cmd: 'sync_menu_to_aggregator' }, { ownerId, aggregator });
+  }
+
+  // Webhook endpoint (doesn't need auth guard as it's called by third parties, but normally requires a secret token)
+  @Post('integrations/orders/webhook')
+  receiveAggregatorOrder(@Body() body: any) {
+    const aggregator = body.source || 'UNKNOWN';
+    return this.orderClient.send({ cmd: 'receive_aggregator_order' }, { aggregator, payload: body });
   }
 }

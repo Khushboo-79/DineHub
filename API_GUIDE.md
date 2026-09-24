@@ -700,4 +700,364 @@ Fetches the detailed Sales Report metrics including trends (% vs last period) an
 
 ---
 
+## 14. Shift & Cash Management (Billing Service)
+
+### 14.1 Open Shift
+Starts a new shift with an opening cash float.
+
+- **URL:** `http://localhost:3000/shifts/open`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "restaurantId": "RESTAURANT_ID_HERE",
+  "openingFloat": 5000
+}
+```
+
+### 14.2 Cash Drop / Payout
+Records cash being added to or removed from the cash drawer during the shift.
+
+- **URL:** `http://localhost:3000/shifts/cash-drop`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "shiftId": "SHIFT_ID_HERE",
+  "amount": 2000,
+  "reason": "Paid vendor for ice",
+  "type": "PAYOUT" 
+}
+```
+*(Note: `type` can be `DROP`, `PAYIN`, or `PAYOUT`)*
+
+### 14.3 Close Shift
+Ends the shift, calculating the expected cash versus the actual physical cash counted.
+
+- **URL:** `http://localhost:3000/shifts/close`
+- **Method:** `POST`
+- **Headers:** 
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_access_token_here>`
+- **Request Body:**
+```json
+{
+  "shiftId": "SHIFT_ID_HERE",
+  "actualCash": 12500
+}
+```
+
+### 14.4 Get Shifts List
+Fetches the history of cash shifts for a restaurant.
+
+- **URL:** `http://localhost:3000/shifts?restaurantId=YOUR_RESTAURANT_ID`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 14.5 Get Shift Report
+Fetches the detailed breakdown of a single shift (including all cash drops/payouts and total sales).
+
+- **URL:** `http://localhost:3000/shifts/:id/report`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+---
+
+## 15. Table & Floor Plan Management (Restaurant Service)
+
+### 15.1 Create Zone
+Creates a new seating zone (e.g., Indoor, Patio, VIP).
+
+- **URL:** `http://localhost:3000/tables/zones`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "outletId": "OUTLET_ID_HERE",
+  "name": "Indoor Seating",
+  "description": "Main dining hall"
+}
+```
+
+### 15.2 Create Table
+Creates a table inside a specific zone.
+
+- **URL:** `http://localhost:3000/tables`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "zoneId": "ZONE_ID_HERE",
+  "name": "T-01",
+  "capacity": 4
+}
+```
+
+### 15.3 Get Live Table Status
+Fetches all zones and their nested tables with their current occupancy status (`AVAILABLE`, `OCCUPIED`, `RESERVED`).
+
+- **URL:** `http://localhost:3000/tables/live-status?outletId=OUTLET_ID_HERE`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 15.4 Assign/Update Table Status
+Manually updates the status of a table (e.g., when a walk-in guest is seated).
+
+- **URL:** `http://localhost:3000/tables/:id/assign`
+- **Method:** `PATCH`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "status": "OCCUPIED" 
+}
+```
+
+### 15.5 Create Reservation
+Books a table in advance for a customer.
+
+- **URL:** `http://localhost:3000/reservations`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "outletId": "OUTLET_ID_HERE",
+  "customerName": "Rahul Sharma",
+  "customerPhone": "9876543210",
+  "guestsCount": 4,
+  "reservationTime": "2026-09-25T19:30:00.000Z",
+  "specialRequests": "Window seat preferred"
+}
+```
+
+---
+
+## 16. Advanced Kitchen Display System (KDS)
+
+### 16.1 Get Active Kitchen Tickets
+Fetches a live stream of all active orders (`NEW` or `PREPARING`) and their nested items for the Kitchen Screen.
+
+- **URL:** `http://localhost:3000/kds/active-tickets?outletId=OUTLET_ID_HERE`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 16.2 Update Item Cooking Status
+Allows the chef to mark a specific plate/item within an order as `PREPARING`, `READY`, or `SERVED`.
+*Note: If all items in an order are marked `READY`, the system automatically changes the entire parent order's status to `READY`!*
+
+- **URL:** `http://localhost:3000/kds/items/:id/status`
+- **Method:** `PATCH`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "status": "READY" 
+}
+```
+
+### 16.3 Get Expediter View (Waitstaff)
+Fetches a list of items that are marked as `READY` in the kitchen, but belong to orders that are not yet completely served. Waiters use this screen to know what dishes to physically pick up from the kitchen counter right now.
+
+- **URL:** `http://localhost:3000/kds/expediter?outletId=OUTLET_ID_HERE`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+---
+
+## 17. Advanced CRM & Loyalty
+
+### 17.1 Create Customer
+Creates a new customer profile in the restaurant's CRM.
+
+- **URL:** `http://localhost:3000/crm/customers`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "name": "Jane Doe",
+  "phone": "9876543211",
+  "email": "jane@example.com",
+  "loyaltyPoints": 100
+}
+```
+
+### 17.2 Get All Customers
+Fetches the CRM directory, sorted by visit frequency.
+
+- **URL:** `http://localhost:3000/crm/customers`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 17.3 Lookup Customer by Phone
+Quickly finds a customer by phone number (useful during POS checkout).
+
+- **URL:** `http://localhost:3000/crm/customers/:phone`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 17.4 Add/Deduct Loyalty Points
+Updates the customer's loyalty points balance.
+
+- **URL:** `http://localhost:3000/crm/customers/:id/points`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "points": 50 
+}
+```
+*(Note: Use negative values to deduct points when redeemed)*
+
+---
+
+## 18. Automated Taxes & Discounts Management
+
+### 18.1 Create Tax Setting
+Defines a tax rule that will be automatically applied to invoices (e.g., GST, VAT).
+
+- **URL:** `http://localhost:3000/taxes`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "name": "CGST",
+  "rate": 2.5,
+  "type": "PERCENTAGE"
+}
+```
+
+### 18.2 Get Active Taxes
+Fetches all active tax rules for the restaurant.
+
+- **URL:** `http://localhost:3000/taxes`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 18.3 Create Discount Rule
+Creates a reusable discount that staff can apply to orders.
+
+- **URL:** `http://localhost:3000/discounts`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "name": "Happy Hour 10%",
+  "value": 10,
+  "type": "PERCENTAGE",
+  "minOrderValue": 500
+}
+```
+
+### 18.4 Get Active Discounts
+Fetches all active discount rules for the restaurant.
+
+- **URL:** `http://localhost:3000/discounts`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+---
+
+## 19. Multi-Outlet & HQ Operations
+
+### 19.1 Add New Outlet (Branch)
+Allows the owner (HQ) to open a new branch of their restaurant brand.
+
+- **URL:** `http://localhost:3000/restaurants/outlets`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "name": "DineHub Downtown",
+  "openingTime": "11:00",
+  "closingTime": "23:00",
+  "services": ["DINE_IN", "TAKEAWAY", "DELIVERY"],
+  "cuisines": ["Italian", "Continental"],
+  "hasGST": true,
+  "gstin": "27AADCB2230M1Z2",
+  "fssaiNumber": "11519036000213",
+  "serviceCharge": 10,
+  "invoicePrefix": "DH-DT"
+}
+```
+
+### 19.2 Get All Outlets
+Fetches a list of all outlets owned by the restaurant brand. Useful for HQ dashboards.
+
+- **URL:** `http://localhost:3000/restaurants/outlets`
+- **Method:** `GET`
+- **Headers:** `Authorization: Bearer <token>`
+
+### 19.3 Update Outlet Details
+Updates the configuration of a specific branch.
+
+- **URL:** `http://localhost:3000/restaurants/outlets/:id`
+- **Method:** `PATCH`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "closingTime": "23:30"
+}
+```
+
+---
+
+## 20. Third-Party Delivery Integrations
+
+### 20.1 Sync Menu to Aggregator
+Pushes the restaurant's latest menu to a third-party aggregator like Zomato or Swiggy.
+
+- **URL:** `http://localhost:3000/integrations/menu/sync`
+- **Method:** `POST`
+- **Headers:** `Authorization: Bearer <token>`
+- **Request Body:**
+```json
+{
+  "aggregator": "ZOMATO"
+}
+```
+
+### 20.2 Receive Aggregator Order (Webhook)
+An open endpoint designed to receive incoming orders directly from third-party aggregators.
+
+- **URL:** `http://localhost:3000/integrations/orders/webhook`
+- **Method:** `POST`
+- **Request Body:** *(Simulated Aggregator Payload)*
+```json
+{
+  "source": "SWIGGY",
+  "orderNumber": "SW-998877",
+  "outletId": "OUTLET_ID_HERE",
+  "customer": {
+    "name": "John Doe",
+    "phone": "9988776655"
+  },
+  "subtotal": 450,
+  "totalAmount": 500,
+  "items": [
+    {
+      "name": "Paneer Tikka",
+      "quantity": 2,
+      "price": 225
+    }
+  ]
+}
+```
+
+---
+
 *Note: This document will be continually updated as we build more features.*
