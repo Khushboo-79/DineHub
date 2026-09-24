@@ -16,4 +16,26 @@ export class RestaurantsController {
   getRestaurantByOwner(@Payload() data: { ownerId: string }) {
     return this.restaurantsService.getRestaurantByOwner(data.ownerId);
   }
+
+  // --- Multi-Outlet Management ---
+
+  @MessagePattern({ cmd: 'create_outlet' })
+  createOutlet(@Payload() data: { ownerId: string; dto: any }) {
+    return this.restaurantsService.createOutlet(data.ownerId, data.dto);
+  }
+
+  @MessagePattern({ cmd: 'get_outlets' })
+  getOutlets(@Payload() data: { ownerId: string }) {
+    return this.restaurantsService.getOutlets(data.ownerId);
+  }
+
+  @MessagePattern({ cmd: 'get_outlet_by_id' })
+  getOutletById(@Payload() data: { ownerId: string; outletId: string }) {
+    return this.restaurantsService.getOutletById(data.ownerId, data.outletId);
+  }
+
+  @MessagePattern({ cmd: 'update_outlet' })
+  updateOutlet(@Payload() data: { ownerId: string; outletId: string; dto: any }) {
+    return this.restaurantsService.updateOutlet(data.ownerId, data.outletId, data.dto);
+  }
 }

@@ -70,4 +70,60 @@ export class RestaurantsService {
     }
     return restaurant;
   }
+
+  // --- Multi-Outlet Management ---
+
+  async createOutlet(ownerId: string, dto: any) {
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { ownerId } });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    return this.prisma.outlet.create({
+      data: {
+        restaurantId: restaurant.id,
+        ...dto,
+      },
+    });
+  }
+
+  async getOutlets(ownerId: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { ownerId } });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    return this.prisma.outlet.findMany({
+      where: { restaurantId: restaurant.id },
+    });
+  }
+
+  async getOutletById(ownerId: string, outletId: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { ownerId } });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    const outlet = await this.prisma.outlet.findUnique({
+      where: { id: outletId },
+    });
+
+    if (!outlet || outlet.restaurantId !== restaurant.id) {
+      throw new NotFoundException('Outlet not found');
+    }
+
+    return outlet;
+  }
+
+  async updateOutlet(ownerId: string, outletId: string, dto: any) {
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { ownerId } });
+    if (!restaurant) throw new NotFoundException('Restaurant not found');
+
+    const outlet = await this.prisma.outlet.findUnique({
+      where: { id: outletId },
+    });
+
+    if (!outlet || outlet.restaurantId !== restaurant.id) {
+      throw new NotFoundException('Outlet not found');
+    }
+
+    return this.prisma.outlet.update({
+      where: { id: outletId },
+      data: dto,
+    });
+  }
 }

@@ -5,6 +5,8 @@ import { redisStore } from 'cache-manager-redis-yet';
 import { MenuController } from './menu.controller.js';
 import { MenuService } from './menu.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { IntegrationsController } from './integrations.controller.js';
+import { IntegrationsService } from './integrations.service.js';
 
 @Module({
   imports: [
@@ -28,7 +30,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
       },
     ]),
   ],
-  controllers: [MenuController],
-  providers: [MenuService]
+  controllers: [MenuController, IntegrationsController],
+  providers: [MenuService, IntegrationsService]
 })
 export class MenuModule {}

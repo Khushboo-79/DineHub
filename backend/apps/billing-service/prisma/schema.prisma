@@ -72,3 +72,61 @@ model SubscriptionPayment {
   status          String       @default("PAID")
   date            DateTime     @default(now())
 }
+
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+model CashShift {
+  id              String      @id @default(uuid())
+  restaurantId    String      
+  openedById      String      
+  closedById      String?
+  openingFloat    Float
+  expectedCash    Float?
+  actualCash      Float?
+  discrepancy     Float?
+  status          ShiftStatus @default(OPEN)
+  openedAt        DateTime    @default(now())
+  closedAt        DateTime?
+  cashDrops       CashDrop[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model CashDrop {
+  id            String    @id @default(uuid())
+  shiftId       String
+  shift         CashShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  amount        Float
+  reason        String?
+  type          String    @default("DROP") // DROP, PAYIN, PAYOUT
+  performedById String
+  createdAt     DateTime  @default(now())
+}
+
+
+model Tax {
+  id            String   @id @default(uuid())
+  restaurantId  String
+  name          String   // e.g., "CGST", "SGST", "Liquor Tax"
+  rate          Float    // Percentage (e.g., 2.5)
+  type          String   @default("PERCENTAGE") // PERCENTAGE, FLAT
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Discount {
+  id            String   @id @default(uuid())
+  restaurantId  String
+  name          String   // e.g., "Happy Hour", "Staff Discount"
+  value         Float
+  type          String   @default("PERCENTAGE") // PERCENTAGE, FLAT
+  minOrderValue Float?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
