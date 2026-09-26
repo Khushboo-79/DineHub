@@ -144,25 +144,30 @@ export class AuthService {
   }
 
   async changePassword(userId: string, dto: import('./dto/change-password.dto.js').ChangePasswordDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new BadRequestException('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new BadRequestException('User not found');
 
-    if (user.password) {
-      if (!dto.currentPassword) {
-        throw new BadRequestException('Current password is required');
+      if (user.password) {
+        if (!dto.currentPassword) {
+          throw new BadRequestException('Current password is required');
+        }
+        const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+        if (!isMatch) throw new UnauthorizedException('Incorrect current password');
       }
-      const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
-      if (!isMatch) throw new UnauthorizedException('Incorrect current password');
+
+      const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+      
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+      });
+
+      return { message: 'Password updated successfully' };
+    } catch (error) {
+      console.error("ERROR IN CHANGE PASSWORD:", error);
+      throw error;
     }
-
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
-    
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
-
-    return { message: 'Password updated successfully' };
   }
 
   async logout(userId: string) {

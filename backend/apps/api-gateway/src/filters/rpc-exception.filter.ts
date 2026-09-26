@@ -12,6 +12,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | object = 'Internal server error';
 
+    console.error(`[GlobalExceptionFilter] Caught exception:`, exception);
+
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       message = exception.getResponse();
@@ -21,12 +23,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = (error as any).message || error;
     } else if (exception?.message) {
       // Handle generic errors that get passed from microservices as regular objects
-      if (exception.status || exception.statusCode) {
+      if (typeof exception.status === 'number' || typeof exception.statusCode === 'number') {
         status = exception.status || exception.statusCode;
         message = exception.message || exception.response;
-      } else if (exception.response) {
+      } else if (exception.response && typeof exception.response.statusCode === 'number') {
         status = exception.response.statusCode || HttpStatus.BAD_REQUEST;
         message = exception.response.message || exception.response;
+      } else if (exception.error && typeof exception.error.statusCode === 'number') {
+        status = exception.error.statusCode;
+        message = exception.error.message || exception.message;
+      } else if (exception.status === 'error') {
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        message = exception.message || 'Internal server error';
       }
     }
 
