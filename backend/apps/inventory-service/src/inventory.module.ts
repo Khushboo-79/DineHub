@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { APP_FILTER } from '@nestjs/core';
 import { InventoryController } from './inventory.controller.js';
 import { InventoryService } from './inventory.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { HttpToRpcExceptionFilter } from './filters/http-to-rpc.filter.js';
 
 @Module({
   imports: [
@@ -16,6 +18,12 @@ import { PrismaModule } from './prisma/prisma.module.js';
     ]),
   ],
   controllers: [InventoryController],
-  providers: [InventoryService]
+  providers: [
+    InventoryService,
+    {
+      provide: APP_FILTER,
+      useClass: HttpToRpcExceptionFilter,
+    }
+  ]
 })
 export class InventoryModule {}
