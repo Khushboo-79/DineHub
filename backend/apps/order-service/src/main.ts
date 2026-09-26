@@ -1,3 +1,4 @@
+import { MicroserviceExceptionFilter } from '../../../libs/shared/filters/microservice-exception.filter.js';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
@@ -11,6 +12,10 @@ async function bootstrap() {
   
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   
+
+  app.useGlobalFilters(new MicroserviceExceptionFilter());
+  
   await app.listen();
 }
 await bootstrap();
+

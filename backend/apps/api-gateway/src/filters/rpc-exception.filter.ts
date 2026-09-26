@@ -22,13 +22,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception?.message) {
       // Handle generic errors that get passed from microservices as regular objects
       if (exception.status || exception.statusCode) {
-        status = exception.status || exception.statusCode;
+        let code = exception.statusCode || exception.status;
+        if (typeof code === 'string') {
+          status = parseInt(code, 10);
+          if (isNaN(status)) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        } else {
+          status = code;
+        }
         message = exception.message || exception.response;
       } else if (exception.response) {
         status = exception.response.statusCode || HttpStatus.BAD_REQUEST;
         message = exception.response.message || exception.response;
       }
     }
+
+    console.error('API Gateway Exception:', exception);
 
     if (typeof message === 'object' && message !== null) {
       response.status(status).json({

@@ -1,3 +1,4 @@
+import { MicroserviceExceptionFilter } from '../../../libs/shared/filters/microservice-exception.filter.js';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
@@ -29,3 +30,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
 }
 await bootstrap();
+
+
