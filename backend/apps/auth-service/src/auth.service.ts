@@ -75,7 +75,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           mobileNumber,
-          role: 'MANAGER', // Default role for V1 onboarding
+          role: 'OWNER', // Default role for V1 onboarding (changed from MANAGER)
         },
       });
     }

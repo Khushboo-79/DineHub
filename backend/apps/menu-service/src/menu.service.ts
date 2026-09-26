@@ -29,14 +29,22 @@ export class MenuService {
     }
   }
 
+  private async clearMenuCache(restaurantId: string) {
+    // Clear common pagination caches
+    await this.cacheManager.del(`menu_${restaurantId}_page_1_limit_10`);
+    await this.cacheManager.del(`menu_${restaurantId}_page_1_limit_1000`);
+  }
+
   async createCategory(ownerId: string, dto: CreateCategoryDto) {
     const restaurantId = await this.getRestaurantId(ownerId);
-    return this.prisma.menuCategory.create({
+    const category = await this.prisma.menuCategory.create({
       data: {
         name: dto.name,
         restaurantId,
       },
     });
+    await this.clearMenuCache(restaurantId);
+    return category;
   }
 
   async createMenuItem(ownerId: string, dto: CreateMenuItemDto) {
@@ -53,7 +61,7 @@ export class MenuService {
       price: variant.price,
     })) || [];
 
-    return this.prisma.menuItem.create({
+    const item = await this.prisma.menuItem.create({
       data: {
         restaurantId,
         categoryId: dto.categoryId,
@@ -77,6 +85,9 @@ export class MenuService {
         variants: true,
       },
     });
+
+    await this.clearMenuCache(restaurantId);
+    return item;
   }
 
   async getMenu(ownerId: string, page: number = 1, limit: number = 10) {
@@ -137,10 +148,13 @@ export class MenuService {
     });
     if (!item) throw new NotFoundException('Menu item not found or unauthorized');
 
-    return this.prisma.menuItem.update({
+    const updatedItem = await this.prisma.menuItem.update({
       where: { id: itemId },
       data,
     });
+
+    await this.clearMenuCache(restaurantId);
+    return updatedItem;
   }
 
   async deleteMenuItem(ownerId: string, itemId: string) {
@@ -156,6 +170,7 @@ export class MenuService {
       where: { id: itemId },
     });
     
+    await this.clearMenuCache(restaurantId);
     return { message: 'Item deleted successfully' };
   }
 }

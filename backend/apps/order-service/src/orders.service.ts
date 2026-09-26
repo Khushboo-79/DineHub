@@ -48,19 +48,23 @@ export class OrdersService {
         this.menuClient.send({ cmd: 'get_menu' }, { ownerId, page: 1, limit: 1000 })
       );
       
-      const allAvailableItemNames = new Set<string>();
+      const availableItems = new Map<string, string>();
       if (menuResponse?.data) {
         menuResponse.data.forEach((category: any) => {
           category.items?.forEach((item: any) => {
-            allAvailableItemNames.add(item.name.toLowerCase());
+            availableItems.set(item.name.toLowerCase(), item.id);
           });
         });
       }
 
       // Verify each item in the order
       for (const orderItem of dto.items) {
-        if (!allAvailableItemNames.has(orderItem.itemName.toLowerCase())) {
+        const itemId = availableItems.get(orderItem.itemName.toLowerCase());
+        if (!itemId) {
           throw new BadRequestException(`Menu item '${orderItem.itemName}' does not exist.`);
+        }
+        if (!orderItem.menuItemId) {
+          orderItem.menuItemId = itemId;
         }
       }
     } catch (error) {

@@ -204,29 +204,7 @@ export class ApiGatewayController {
     return this.inventoryClient.send({ cmd: 'get_inventory' }, { ownerId, page, limit });
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'MANAGER', 'STAFF')
-  @Get('inventory/:id')
-  getInventoryItem(@Request() req: any, @Param('id') id: string) {
-    const ownerId = req.user.sub;
-    return this.inventoryClient.send({ cmd: 'get_inventory_item' }, { ownerId, id });
-  }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'MANAGER')
-  @Patch('inventory/:id')
-  updateInventoryItem(@Request() req: any, @Param('id') id: string, @Body() body: any) {
-    const ownerId = req.user.sub;
-    return this.inventoryClient.send({ cmd: 'update_inventory_item' }, { ownerId, id, dto: body });
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'MANAGER')
-  @Delete('inventory/:id')
-  deleteInventoryItem(@Request() req: any, @Param('id') id: string) {
-    const ownerId = req.user.sub;
-    return this.inventoryClient.send({ cmd: 'delete_inventory_item' }, { ownerId, id });
-  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'MANAGER', 'STAFF')
@@ -615,6 +593,32 @@ export class ApiGatewayController {
   getRecipeByMenuItemId(@Request() req: any, @Param('menuItemId') menuItemId: string) {
     const ownerId = req.user.sub;
     return this.inventoryClient.send({ cmd: 'get_recipe_by_menu_item_id' }, { ownerId, menuItemId });
+  }
+
+  // --- Parameterized Inventory Item Routes (must be last to avoid catching suppliers, purchases, etc.) ---
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER', 'STAFF')
+  @Get('inventory/:id')
+  getInventoryItem(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'get_inventory_item' }, { ownerId, id });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER')
+  @Patch('inventory/:id')
+  updateInventoryItem(@Request() req: any, @Param('id') id: string, @Body() body: any) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'update_inventory_item' }, { ownerId, id, dto: body });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'MANAGER')
+  @Delete('inventory/:id')
+  deleteInventoryItem(@Request() req: any, @Param('id') id: string) {
+    const ownerId = req.user.sub;
+    return this.inventoryClient.send({ cmd: 'delete_inventory_item' }, { ownerId, id });
   }
 
   // --- Analytics ---
